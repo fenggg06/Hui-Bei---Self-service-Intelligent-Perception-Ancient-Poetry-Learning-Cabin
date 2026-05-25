@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="zh" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>慧背 - 家长监控</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=ZCOOL+XiaoWei&family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink-black: #0A0A0A;
+            --rice-paper: #FFF5E6;
+            --vermilion: #CB3B2F;
+            --celadon: #B8D8D8;
+            --gold-leaf: #D4AF37;
+            --moon-white: #F0F0F0;
+            --bamboo-green: #3A5F0B;
+            --mercedes-blue: #0066B2;
+            --blue-archive-pink: #FF66CC;
+            --apple-white: #FFFFFF;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'ZCOOL XiaoWei', 'Noto Serif SC', serif;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        body {
+            background: var(--rice-paper);
+            color: var(--ink-black);
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: url('data:image/svg+xml;utf8,<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z" fill="%23cb3b2f" fill-opacity="0.05" fill-rule="evenodd"/></svg>');
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 6%;
+        }
+
+        .header {
+            position: relative;
+            padding: 4rem 0;
+            margin-bottom: 3rem;
+            text-align: center;
+            background: linear-gradient(135deg, rgba(203, 59, 47, 0.08) 0%, rgba(255, 102, 204, 0.05) 100%);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: -1;
+        }
+
+        .title {
+            font-family: 'Ma Shan Zheng', cursive;
+            font-size: 3rem;
+            color: var(--vermilion);
+            margin-bottom: 1rem;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--ink-black);
+            opacity: 0.8;
+        }
+
+        .card {
+            background: var(--rice-paper);
+            border-radius: 16px;
+            padding: 2.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05), inset 0 -2px 12px rgba(0, 0, 0, 0.03);
+            margin-bottom: 2.5rem;
+            position: relative;
+            overflow: visible !important; /* 关键：取消overflow hidden，防止下拉框被截断 */
+            z-index: 10;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            width: 80px;
+            height: 80px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="%23cb3b2f" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>') no-repeat;
+            opacity: 0.1;
+            transition: all 0.5s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 36px rgba(0, 102, 178, 0.1);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            color: var(--mercedes-blue);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--celadon);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            border-left: 4px solid var(--gold-leaf);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--vermilion);
+            margin: 0.5rem 0;
+        }
+
+        .stat-label {
+            color: var(--ink-black);
+            opacity: 0.7;
+        }
+
+        .plan-list {
+            margin-top: 1.5rem;
+        }
+
+        .plan-item {
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .plan-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .plan-info {
+            flex: 1;
+        }
+
+        .plan-title {
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+        }
+
+        .plan-meta {
+            font-size: 0.9rem;
+            color: var(--ink-black);
+            opacity: 0.7;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            margin: 0.5rem 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--mercedes-blue), var(--blue-archive-pink));
+            border-radius: 4px;
+        }
+
+        .plan-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--vermilion);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #B83227;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--mercedes-blue);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #005599;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--mercedes-blue);
+            color: var(--mercedes-blue);
+        }
+
+        .btn-outline:hover {
+            background: var(--mercedes-blue);
+            color: white;
+        }
+
+        .btn-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal-content {
+            background: var(--rice-paper);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
+            position: relative;
+            z-index: 1001;
+        }
+
+        .modal-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            color: var(--mercedes-blue);
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .modal-footer {
+            padding: 1.5rem 2rem;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--ink-black);
+            opacity: 0.7;
+        }
+
+        .close-modal:hover {
+            opacity: 1;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.75rem;
+            font-weight: bold;
+            color: var(--ink-black);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            border: 2px solid var(--celadon);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--mercedes-blue);
+            box-shadow: 0 0 0 3px rgba(0, 102, 178, 0.1);
+        }
+
+        #edit-plan-remark {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        #plan-remark-container {
+            border-left: 3px solid var(--mercedes-blue);
+        }
+
+        .plan-remark-preview {
+            color: var(--ink-black);
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+
+        .time-slots {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .time-slot {
+            flex: 1;
+            min-width: 280px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 8px;
+            padding: 1rem;
+            border: 1px dashed var(--celadon);
+        }
+        /* 任务管理样式 */
+        .task-form {
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .task-list {
+            margin-top: 1rem;
+        }
+
+        .task-item {
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--mercedes-blue);
+        }
+
+        .task-item.completed {
+            border-left-color: var(--bamboo-green);
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .task-type {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            background: var(--mercedes-blue);
+            color: white;
+        }
+
+        .task-type.reminder {
+            background: var(--blue-archive-pink);
+        }
+
+        .task-content {
+            margin: 0.5rem 0;
+            line-height: 1.6;
+        }
+
+        .task-meta {
+            font-size: 0.85rem;
+            color: var(--ink-black);
+            opacity: 0.7;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--ink-black);
+            opacity: 0.5;
+        }
+        .stage-item {
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--gold-leaf);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stage-item.completed {
+            border-left-color: var(--bamboo-green);
+            background: rgba(58, 95, 11, 0.05);
+        }
+
+        .stage-info {
+            flex: 1;
+        }
+
+        .stage-task {
+            margin-top: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .floating-ink {
+            position: fixed;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.1;
+            animation: floatFloatingInk 10s ease-in-out infinite;
+            font-family: 'Ma Shan Zheng', cursive;
+        }
+
+        @keyframes floatFloatingInk {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-40px) rotate(10deg); }
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(203, 59, 47, 0.1);
+            border-left-color: var(--vermilion);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        [data-theme="dark"] body {
+            --ink-black: #E8E6E3;
+            --rice-paper: #1A1A1A;
+            --moon-white: #2D2D2D;
+            --celadon: #3A5F5F;
+            --mercedes-blue: #0088FF;
+            --blue-archive-pink: #FF88FF;
+        }
+
+        [data-theme="dark"] .header::after {
+            background: rgba(30, 30, 30, 0.7);
+        }
+
+        [data-theme="dark"] .card,
+        [data-theme="dark"] .stat-card,
+        [data-theme="dark"] .plan-item,
+        [data-theme="dark"] .modal-content,
+        [data-theme="dark"] .stage-item,
+        [data-theme="dark"] .time-slot {
+            background: rgba(45, 45, 45, 0.6);
+        }
+
+        [data-theme="dark"] .stage-item.completed {
+            background: rgba(58, 95, 11, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 2rem 4%;
+            }
+
+            .title {
+                font-size: 2.5rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            .plan-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                padding: 0.6rem 1rem;
+                font-size: 0.85rem;
+            }
+        }
+
+        .search-container {
+            position: relative;
+            width: 100%;
+            z-index: 9999;
+        }
+
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            margin-top: 2px;
+            background: var(--apple-white);
+            border: 1px solid var(--celadon);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 10000;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            display: none;
+        }
+
+        .search-results .result-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--moon-white);
+            transition: background 0.2s ease;
+        }
+
+        .search-results .result-item:hover,
+        .search-results .result-item.active {
+            background-color: rgba(0, 102, 178, 0.05);
+        }
+
+        .search-results .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-results .highlight {
+            color: var(--vermilion);
+            font-weight: bold;
+        }
+
+        [data-theme="dark"] .search-results {
+            background: #2D2D2D;
+            border-color: #444;
+        }
+
+        [data-theme="dark"] .search-results .result-item {
+            border-bottom: 1px solid #3A3A3A;
+        }
+
+        [data-theme="dark"] .search-results .result-item:hover,
+        [data-theme="dark"] .search-results .result-item.active {
+            background-color: rgba(0, 136, 255, 0.1);
+        }
+
+        [data-theme="dark"] .search-results .highlight {
+            color: #FF88FF;
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-ink" style="left:5%;top:15%;font-size:70px">督</div>
+    <div class="floating-ink" style="right:10%;top:40%;font-size:50px">导</div>
+    <div class="floating-ink" style="left:20%;bottom:10%;font-size:60px">进</div>
+    <div class="floating-ink" style="right:5%;bottom:30%;font-size:40px">阶</div>
+
+    <div class="container">
+        <header class="header">
+            <h1 class="title">学习计划监控</h1>
+            <p class="subtitle">莫愁前路无知己，天下谁人不识君</p>
+        </header>
+
+        <div class="card">
+            <h2 class="card-title"><i class="fas fa-chart-pie"></i> 学习概览</h2>
+            <div class="dashboard">
+                <div class="stat-card">
+                    <div class="stat-label">当前计划数</div>
+                    <div class="stat-value" id="total-plans">0</div>
+                    <div class="stat-desc">正在进行的学习计划</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">平均完成率</div>
+                    <div class="stat-value" id="avg-completion">0%</div>
+                    <div class="stat-desc">所有计划的完成情况</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">已掌握诗词</div>
+                    <div class="stat-value" id="mastered-poems">0</div>
+                    <div class="stat-desc">已完成学习的诗词</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title"><i class="fas fa-list-alt"></i> 学习计划列表</h2>
+            <div class="loading" id="plans-loading">
+                <div class="loading-spinner"></div>
+                <p>正在加载学习计划...</p>
+            </div>
+            <div class="plan-list" id="plan-list">
+                <!-- 计划列表将在这里动态生成 -->
+            </div>
+        </div>
+
+        <!-- 任务管理模块 -->
+        <div class="card">
+            <h2 class="card-title"><i class="fas fa-tasks"></i> 任务管理</h2>
+           <!-- 发送新任务区域 -->
+            <div class="task-form">
+                <div class="form-group">
+                    <label class="form-label">任务类型</label>
+                    <select class="form-control" id="task-type">
+                    <option value="reminder">督促消息</option>
+                    <option value="assignment">布置任务</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">任务内容</label>
+                    <textarea class="form-control" id="task-content" rows="3" placeholder="请输入任务内容..."></textarea>
+                </div>
+
+                <div class="form-group" id="due-date-container">
+                    <label class="form-label">完成截止时间</label>
+                    <input type="datetime-local" class="form-control" id="task-due-date">
+                </div>
+
+                <button class="btn btn-primary" id="send-task">发送任务</button>
+            </div>
+
+           <!-- 任务列表 -->
+           <h3 style="margin-top: 1.5rem;">已发送任务</h3>
+           <div class="task-list" id="task-list">
+               <!-- 任务列表将动态生成 -->
+               <p class="empty-state">暂无发送的任务</p>
+           </div>
+        </div>
+
+    </div>
+    <!-- 查看计划详情模态框 -->
+    <div class="modal" id="view-plan-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">计划详情</h3>
+                <button class="close-modal" onclick="closeViewModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="view-plan-body">
+                <!-- 计划详情将在这里动态生成 -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeViewModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 修改计划模态框 -->
+    <div class="modal" id="edit-plan-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">修改学习计划</h3>
+                <button class="close-modal" onclick="closeEditModal()">&times;</button>
+            </div>
+
+            <div class="modal-body" id="edit-plan-body">
+                <!-- 修改计划表单将在这里动态生成 -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeEditModal()">取消</button>
+                <button class="btn btn-primary" id="save-edited-plan">保存修改</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let currentPlans = [];
+        let currentPlanIndex = -1;
+        let allPoems = []; // 存储所有诗词数据
+        let activeResultIndex = -1; // 键盘选中的搜索结果索引
+        let searchKeyword = ''; // 当前搜索关键字
+        const userId = 'student_1'; // 简单处理，实际应用中应使用真实用户ID
+
+        // 任务管理相关功能
+        let tasks = [];
+
+        // 页面加载时获取计划列表
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchPlans();
+            fetchTasks();
+
+            // 初始化浮动元素动画延迟
+            document.querySelectorAll('.floating-ink').forEach(el => {
+                el.style.animationDelay = `${Math.random() * 4}s`;
+            });
+
+            // 发送任务按钮事件
+            document.getElementById('send-task').addEventListener('click', sendTask);
+
+            // 任务类型切换事件
+            document.getElementById('task-type').addEventListener('change', function() {
+                const dueDateContainer = document.getElementById('due-date-container');
+                if (this.value === 'assignment') {
+                    dueDateContainer.style.display = 'block';
+                } else {
+                    dueDateContainer.style.display = 'none';
+                }
+            });
+
+            // 保存修改计划按钮事件（移到DOM加载时绑定，避免重复绑定）
+            document.getElementById('save-edited-plan').addEventListener('click', saveEditedPlan);
+        });
+
+        //关键字高亮函数
+        function highlightKeyword(text, keyword) {
+            if (!keyword || !text) return text;
+            const regex = new RegExp(`(${keyword})`, 'gi');
+            return text.replace(regex, '<span class="highlight">$1</span>');
+        }
+
+        // 更新搜索结果选中样式
+        function updateActiveResultClass(container) {
+            const results = container.querySelectorAll('.result-item');
+            results.forEach((item, index) => {
+                if (index === activeResultIndex) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+
+        //滚动到选中的搜索结果
+        function scrollToActiveResult(container) {
+            const activeItem = container.querySelector(`.result-item[data-index="${activeResultIndex}"]`);
+            if (activeItem) {
+                activeItem.scrollIntoView({ block: 'nearest' });
+            }
+        }
+
+        //选择诗词处理函数
+        function selectPoem(title, input, resultsContainer) {
+            input.value = title;
+            resultsContainer.style.display = 'none';
+            activeResultIndex = -1; // 重置选中索引
+        }
+
+        //重构：初始化编辑诗词搜索功能
+        function initEditPoemSearch() {
+            const searchInput = document.getElementById('edit-poem-title');
+            const resultsContainer = document.getElementById('edit-poem-search-results');
+
+            // 输入事件 - 实时检索
+            searchInput.addEventListener('input', function() {
+                searchKeyword = this.value.trim();
+                activeResultIndex = -1; // 重置选中索引
+
+                // 无关键字时隐藏搜索结果
+                if (searchKeyword.length < 1) {
+                    resultsContainer.style.display = 'none';
+                    return;
+                }
+
+                // 检索匹配的诗词（标题/作者/朝代包含关键字）
+                const lowerKeyword = searchKeyword.toLowerCase();
+                const matchedPoems = allPoems.filter(poem =>
+                    poem.title.toLowerCase().includes(lowerKeyword) ||
+                    poem.author.toLowerCase().includes(lowerKeyword) ||
+                    poem.dynasty.toLowerCase().includes(lowerKeyword)
+                );
+
+                // 显示检索结果
+                if (matchedPoems.length > 0) {
+                    resultsContainer.innerHTML = '';
+                    matchedPoems.forEach((poem, index) => {
+                        const item = document.createElement('div');
+                        item.className = 'result-item';
+                        item.dataset.index = index;
+                        item.dataset.title = poem.title;
+
+                        // 关键字高亮处理
+                        const highlightedTitle = highlightKeyword(poem.title, searchKeyword);
+                        const highlightedAuthor = highlightKeyword(poem.author, searchKeyword);
+                        const highlightedDynasty = highlightKeyword(poem.dynasty, searchKeyword);
+
+                        // 拼接结果项HTML
+                        item.innerHTML = `${highlightedTitle} - ${highlightedDynasty}·${highlightedAuthor}（${poem.grade}）`;
+
+                        // 鼠标点击选择
+                        item.addEventListener('click', () => {
+                            selectPoem(poem.title, searchInput, resultsContainer);
+                        });
+
+                        // 鼠标悬停选中
+                        item.addEventListener('mouseenter', () => {
+                            activeResultIndex = index;
+                            updateActiveResultClass(resultsContainer);
+                        });
+
+                        resultsContainer.appendChild(item);
+                    });
+                    resultsContainer.style.display = 'block';
+                } else {
+                    // 无匹配结果
+                    resultsContainer.innerHTML = '<div class="result-item">未找到匹配的诗词</div>';
+                    resultsContainer.style.display = 'block';
+                }
+            });
+
+            // 键盘导航事件（上下键选择、回车确认、ESC关闭）
+            searchInput.addEventListener('keydown', function(e) {
+                const results = resultsContainer.querySelectorAll('.result-item');
+                const resultCount = results.length;
+
+                // 搜索结果未显示或无结果时不处理
+                if (resultsContainer.style.display !== 'block' || resultCount === 0) {
+                    return;
+                }
+
+                // 下箭头 - 选中下一个
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    activeResultIndex = (activeResultIndex + 1) % resultCount;
+                    updateActiveResultClass(resultsContainer);
+                    scrollToActiveResult(resultsContainer);
+                }
+                // 上箭头 - 选中上一个
+                else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    activeResultIndex = (activeResultIndex - 1 + resultCount) % resultCount;
+                    updateActiveResultClass(resultsContainer);
+                    scrollToActiveResult(resultsContainer);
+                }
+                // 回车键 - 确认选择
+                else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (activeResultIndex >= 0 && activeResultIndex < resultCount) {
+                        const selectedTitle = results[activeResultIndex].dataset.title;
+                        if (selectedTitle) {
+                            selectPoem(selectedTitle, searchInput, resultsContainer);
+                        }
+                    }
+                }
+                // ESC键 - 关闭搜索结果
+                else if (e.key === 'Escape') {
+                    resultsContainer.style.display = 'none';
+                    activeResultIndex = -1;
+                }
+            });
+
+            // 点击页面其他地方关闭检索结果
+            document.addEventListener('click', function(event) {
+                if (!event.target.closest('#edit-plan-body .search-container')) {
+                    resultsContainer.style.display = 'none';
+                    activeResultIndex = -1;
+                }
+            });
+        }
+
+        // 加载诗词列表并初始化搜索
+        function loadEditPoemOptions() {
+            fetch('http://127.0.0.1:5000/api/poems')
+                .then(response => response.json())
+                .then(poems => {
+                    allPoems = poems; // 存储到全局变量
+                    const searchInput = document.getElementById('edit-poem-title');
+
+                    // 初始化检索功能
+                    initEditPoemSearch();
+
+                    // 选中当前计划的诗词
+                    if (currentPlanIndex !== -1 && currentPlans[currentPlanIndex]) {
+                        const currentPlan = currentPlans[currentPlanIndex];
+                        const currentPoemTitle = currentPlan.poem_title;
+                        searchInput.value = currentPoemTitle;
+                    }
+                })
+                .catch(error => console.error('加载诗词列表失败:', error));
+        }
+
+        // 获取任务列表
+        function fetchTasks() {
+            fetch(`http://127.0.0.1:5000/api/tasks/${userId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('获取任务失败');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    tasks = data.tasks || [];
+                    renderTasks();
+                })
+                .catch(error => {
+                    console.error('获取任务失败:', error);
+                });
+        }
+
+        // 渲染任务列表
+        function renderTasks() {
+            const taskListElement = document.getElementById('task-list');
+            taskListElement.innerHTML = '';
+
+            if (tasks.length === 0) {
+                taskListElement.innerHTML = '<p class="empty-state">暂无发送的任务</p>';
+                return;
+            }
+
+            tasks.forEach((task, index) => {
+                const taskElement = document.createElement('div');
+                taskElement.className = `task-item ${task.completed ? 'completed' : ''}`;
+                taskElement.dataset.taskId = task.id;
+
+                const taskTypeLabel = task.type === 'reminder' ? '督促消息' : '布置任务';
+                const completeBtn = task.completed ?
+                    '<span style="color: var(--bamboo-green);"><i class="fas fa-check-circle"></i> 已完成</span>' :
+                    `<button class="btn btn-outline" onclick="markTaskCompleted(${task.id})">标记完成</button>`;
+
+                taskElement.innerHTML = `
+                    <div class="task-header">
+                        <strong>${taskTypeLabel}</strong>
+                        <span class="task-type ${task.type}">${task.completed ? '已完成' : '待完成'}</span>
+                    </div>
+                    <div class="task-content">${task.content}</div>
+                    <div class="task-meta">
+                        <div>发送时间: ${new Date(task.send_time).toLocaleString()}</div>
+                        ${task.due_date ? `<div>截止时间: ${new Date(task.due_date).toLocaleString()}</div>` : ''}
+                    </div>
+                    <div class="task-actions" style="margin-top: 10px;">
+                         ${completeBtn}
+                    </div>
+                `;
+
+                taskListElement.appendChild(taskElement);
+            });
+        }
+
+        // 发送任务
+        function sendTask() {
+            const taskType = document.getElementById('task-type').value;
+            const taskContent = document.getElementById('task-content').value;
+            const taskDueDate = taskType === 'assignment' ? document.getElementById('task-due-date').value : null;
+
+            if (!taskContent.trim()) {
+                alert('请输入任务内容');
+                return;
+            }
+
+            if (taskType === 'assignment' && !taskDueDate) {
+                alert('请设置完成截止时间');
+                return;
+            }
+
+            fetch('http://127.0.0.1:5000/api/tasks/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    user_id: userId,
+                    type: taskType,
+                    content: taskContent,
+                    due_date: taskDueDate,
+                    send_time: new Date().toISOString()
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('发送任务失败');
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert('任务发送成功');
+                // 清空表单
+                document.getElementById('task-content').value = '';
+                document.getElementById('task-due-date').value = '';
+                // 刷新任务列表
+                fetchTasks();
+            })
+            .catch(error => {
+                console.error('发送任务失败:', error);
+                alert('发送任务时出错');
+            });
+        }
+
+
+        // 标记任务为完成
+        function markTaskCompleted(taskId) {
+            fetch('http://127.0.0.1:5000/api/tasks/complete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    user_id: userId,
+                    task_id: taskId
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('标记任务失败');
+                }
+                return response.json();
+            })
+            .then(data => {
+                fetchTasks(); // 刷新任务列表
+                alert('任务已标记为完成');
+            })
+            .catch(error => {
+                console.error('标记任务失败:', error);
+                alert('标记任务时出错');
+            });
+        }
+
+        // 获取计划列表
+        function fetchPlans() {
+            document.getElementById('plans-loading').style.display = 'block';
+            document.getElementById('plan-list').innerHTML = '';
+
+            fetch(`http://127.0.0.1:5000/api/study-plan/${userId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('获取计划失败');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    document.getElementById('plans-loading').style.display = 'none';
+                    currentPlans = data.plans || [];
+                    renderPlanList();
+                    updateStats();
+                })
+                .catch(error => {
+                    document.getElementById('plans-loading').style.display = 'none';
+                    console.error('获取计划失败:', error);
+                });
+        }
+
+        // 渲染计划列表
+        function renderPlanList() {
+            const planListElement = document.getElementById('plan-list');
+            planListElement.innerHTML = '';
+
+            if (currentPlans.length === 0) {
+                planListElement.innerHTML = '<p style="text-align: center; padding: 2rem;">暂无学习计划</p>';
+                return;
+            }
+
+            currentPlans.forEach((plan, index) => {
+                // 计算完成率
+                const totalStages = plan.schedule.length;
+                const completedStages = plan.schedule.filter(stage => stage.completed).length;
+                const completionRate = totalStages > 0 ? Math.round((completedStages / totalStages) * 100) : 0;
+
+                // 获取诗词标题
+                const poemTitle = plan.poem_title;
+
+                const planElement = document.createElement('div');
+                planElement.className = 'plan-item';
+                planElement.innerHTML = `
+                    <div class="plan-info">
+                        <div class="plan-title">${poemTitle}</div>
+                        <div class="plan-meta">
+                            难度：${plan.difficulty} · 总时长：${plan.required_time}分钟 · 开始于：${plan.now_date.split(' ')[0]}
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-bar" style="width: ${completionRate}%"></div>
+                        </div>
+                        <div class="plan-meta">
+                            进度：${completedStages}/${totalStages} 阶段 (${completionRate}%)
+                        </div>
+
+                        <div class="plan-meta" id="plan-remark-preview-${index}" style="font-style: italic; margin-top: 0.3rem;">
+                            ${plan.remark ? '备注：' + (plan.remark.length > 20 ? plan.remark.substring(0,20) + '...' : plan.remark) : ''}
+                        </div>
+                    </div>
+                    <div class="plan-actions">
+                        <button class="btn btn-icon btn-secondary" onclick="viewPlan(${index})" title="查看详情">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-icon btn-primary" onclick="editPlan(${index})" title="修改计划">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </div>
+                `;
+                planListElement.appendChild(planElement);
+            });
+        }
+
+        // 更新统计信息
+        function updateStats() {
+            document.getElementById('total-plans').textContent = currentPlans.length;
+
+            // 计算平均完成率
+            let totalCompletion = 0;
+            let completedPlans = 0;
+
+            currentPlans.forEach(plan => {
+                const totalStages = plan.schedule.length;
+                if (totalStages === 0) return;
+
+                const completedStages = plan.schedule.filter(stage => stage.completed).length;
+                totalCompletion += (completedStages / totalStages) * 100;
+
+                if (completedStages === totalStages) {
+                    completedPlans++;
+                }
+            });
+
+            const avgCompletion = currentPlans.length > 0 ?
+                Math.round(totalCompletion / currentPlans.length) : 0;
+
+            document.getElementById('avg-completion').textContent = `${avgCompletion}%`;
+            document.getElementById('mastered-poems').textContent = completedPlans;
+        }
+
+        // 查看计划详情
+        function viewPlan(index) {
+            const plan = currentPlans[index];
+
+            if (!plan) return;
+
+            // 生成计划详情HTML
+            let stagesHTML = '';
+            plan.schedule.forEach((stage, stageIndex) => {
+                stagesHTML += `
+                    <div class="stage-item ${stage.completed ? 'completed' : ''}">
+                        <div class="stage-info">
+                            <div>
+                                <strong>第 ${stage.stage} 阶段</strong> ·
+                                ${stage.date} ${stage.time} ·
+                                ${stage.duration} 分钟
+                            </div>
+                            <div class="stage-task">${stage.task}</div>
+                        </div>
+                        ${!stage.completed ? `
+                            <button class="btn btn-primary" onclick="markAsCompleted(${index}, ${stageIndex + 1})">
+                                <i class="fas fa-check"></i> 标记完成
+                            </button>
+                        ` : `
+                            <span style="color: var(--bamboo-green);"><i class="fas fa-check-circle"></i> 已完成</span>
+                        `}
+                    </div>
+                `;
+            });
+
+            // 获取诗词标题
+            const poemTitle = plan.poem_title;
+
+            // 填充模态框内容
+            document.getElementById('view-plan-body').innerHTML = `
+                <div style="text-align: center; margin-bottom: 1.5rem; padding: 1rem; background: rgba(255,255,255,0.3); border-radius: 8px;">
+                    <h3 style="margin-bottom: 0.5rem;">${poemTitle}</h3>
+                    <div style="font-size: 1.1rem; line-height: 1.8; white-space: pre-line; font-family: 'Noto Serif SC', serif;">
+                        ${plan.content}
+                    </div>
+                    <div style="margin-top: 1rem; font-size: 0.9rem;">
+                        难度：<span style="font-weight: bold;">${plan.difficulty}</span> ·
+                        总时长：<span style="font-weight: bold;">${plan.required_time}</span> 分钟 ·
+                        创建时间：${plan.now_date}
+                    </div>
+                </div>
+
+                <div id="plan-remark-container" style="margin: 1rem 0; padding: 1rem; background: rgba(255,255,255,0.2); border-radius: 8px; display: none;">
+                    <h4 style="margin-bottom: 0.5rem;"><i class="fas fa-sticky-note"></i> 备注</h4>
+                    <div id="plan-remark-content"></div>
+                </div>
+
+                <h4 style="margin-bottom: 1rem;">学习进度</h4>
+                ${stagesHTML}
+            `;
+            const remarkContainer = document.getElementById('plan-remark-container');
+            const remarkContent = document.getElementById('plan-remark-content');
+            if (plan.remark && plan.remark.trim()) {
+                remarkContent.textContent = plan.remark;
+                remarkContainer.style.display = 'block';
+            } else {
+                remarkContainer.style.display = 'none';
+            }
+
+            // 显示模态框
+            document.getElementById('view-plan-modal').style.display = 'flex';
+        }
+
+        // 标记阶段为已完成
+        function markAsCompleted(planIndex, stageIndex) {
+            fetch('http://127.0.0.1:5000/api/study-plan/update-progress', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    user_id: userId,
+                    plan_index: planIndex,
+                    stage_completed: stageIndex
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('更新进度失败');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // 刷新计划列表
+                fetchPlans();
+                // 刷新当前查看的计划详情
+                viewPlan(planIndex);
+            })
+            .catch(error => {
+                console.error('更新进度失败:', error);
+                alert('更新进度时出错');
+            });
+        }
+
+        // 编辑计划
+        function editPlan(index) {
+            currentPlanIndex = index;
+            const plan = currentPlans[index];
+            if (!plan) return;
+            loadEditPoemOptions();
+
+            // 生成时间槽HTML
+            let timeSlotsHTML = '';
+            plan.schedule.forEach((stage, i) => {
+                const [startTime, endTime] = stage.time.split('-');
+                timeSlotsHTML += `
+                    <div class="time-slot">
+                        <div class="form-group">
+                            <label class="form-label">星期</label>
+                            <select class="form-control day-select">
+                                <option value="周一" ${stage.date === '周一' ? 'selected' : ''}>周一</option>
+                                <option value="周二" ${stage.date === '周二' ? 'selected' : ''}>周二</option>
+                                <option value="周三" ${stage.date === '周三' ? 'selected' : ''}>周三</option>
+                                <option value="周四" ${stage.date === '周四' ? 'selected' : ''}>周四</option>
+                                <option value="周五" ${stage.date === '周五' ? 'selected' : ''}>周五</option>
+                                <option value="周六" ${stage.date === '周六' ? 'selected' : ''}>周六</option>
+                                <option value="周日" ${stage.date === '周日' ? 'selected' : ''}>周日</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">开始时间</label>
+                            <input type="time" class="form-control start-time" value="${startTime}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">结束时间</label>
+                            <input type="time" class="form-control end-time" value="${endTime}">
+                        </div>
+                        ${i > 0 ? `
+                            <button type="button" class="btn btn-outline remove-slot" style="width: 100%;">
+                                <i class="fas fa-minus"></i> 移除
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+            });
+
+            // 填充编辑模态框
+            document.getElementById('edit-plan-body').innerHTML = `
+                <div class="form-group">
+                    <label class="form-label">诗词标题</label>
+                    <div class="search-container">
+                        <input type="text" class="form-control" id="edit-poem-title" placeholder="输入诗词标题/作者/朝代关键字检索...">
+                        <div class="search-results" id="edit-poem-search-results"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">目标完成日期</label>
+                    <input type="date" class="form-control" id="edit-target-date" value="${plan.target_date || ''}">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">学习时段</label>
+                    <div id="edit-time-slots-container" class="time-slots">
+                        ${timeSlotsHTML}
+                    </div>
+                    <button type="button" class="btn btn-outline" id="add-edit-time-slot">
+                        <i class="fas fa-plus"></i> 添加时段
+                    </button>
+                </div>
+            `;
+
+            // 添加时间槽事件
+            document.getElementById('add-edit-time-slot').addEventListener('click', function() {
+                const container = document.getElementById('edit-time-slots-container');
+                const newSlot = document.createElement('div');
+                newSlot.className = 'time-slot';
+                newSlot.innerHTML = `
+                    <div class="form-group">
+                        <label class="form-label">星期</label>
+                        <select class="form-control day-select">
+                            <option value="周一">周一</option>
+                            <option value="周二">周二</option>
+                            <option value="周三">周三</option>
+                            <option value="周四">周四</option>
+                            <option value="周五">周五</option>
+                            <option value="周六">周六</option>
+                            <option value="周日">周日</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">开始时间</label>
+                        <input type="time" class="form-control start-time" value="19:00">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">结束时间</label>
+                        <input type="time" class="form-control end-time" value="20:00">
+                    </div>
+                    <button type="button" class="btn btn-outline remove-slot" style="width: 100%;">
+                        <i class="fas fa-minus"></i> 移除
+                    </button>
+                `;
+                container.appendChild(newSlot);
+
+                // 添加移除事件
+                newSlot.querySelector('.remove-slot').addEventListener('click', function() {
+                    container.removeChild(newSlot);
+                });
+            });
+
+            // 为已存在的移除按钮添加事件
+            document.querySelectorAll('#edit-time-slots-container .remove-slot').forEach(button => {
+                button.addEventListener('click', function() {
+                    this.closest('.time-slot').remove();
+                });
+            });
+
+            // 显示编辑模态框
+            document.getElementById('edit-plan-modal').style.display = 'flex';
+        }
+
+        // 保存修改后的计划
+        function saveEditedPlan() {
+            if (currentPlanIndex === -1) return;
+
+            // 收集表单数据
+            const newPoemTitle = document.getElementById('edit-poem-title').value.trim();
+            const newTargetDate = document.getElementById('edit-target-date').value;
+
+            // 验证诗词标题
+            if (!newPoemTitle) {
+                alert('请选择或输入诗词标题');
+                return;
+            }
+
+            // 收集时间槽
+            const newAvailableTime = [];
+            document.querySelectorAll('#edit-time-slots-container .time-slot').forEach(slot => {
+                const day = slot.querySelector('.day-select').value;
+                const start = slot.querySelector('.start-time').value;
+                const end = slot.querySelector('.end-time').value;
+
+                if (start && end) {
+                    newAvailableTime.push({
+                        "星期": day,
+                        "开始": start,
+                        "结束": end
+                    });
+                }
+            });
+
+            if (newAvailableTime.length === 0) {
+                alert('请至少保留一个学习时段');
+                return;
+            }
+
+            // 发送修改请求
+            fetch('http://127.0.0.1:5000/api/study-plan/modify', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    user_id: userId,
+                    plan_index: currentPlanIndex,
+                    new_poem_title: newPoemTitle,
+                    new_available_time: newAvailableTime,
+                    new_target_date: newTargetDate,
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('修改计划失败');
+                }
+                return response.json();
+            })
+            .then(data => {
+                closeEditModal();
+                fetchPlans(); // 刷新计划列表
+                alert('计划修改成功');
+            })
+            .catch(error => {
+                console.error('修改计划失败:', error);
+                alert('修改计划时出错');
+            });
+        }
+
+        // 关闭模态框
+        function closeViewModal() {
+            document.getElementById('view-plan-modal').style.display = 'none';
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-plan-modal').style.display = 'none';
+            currentPlanIndex = -1;
+            activeResultIndex = -1; // 重置搜索选中索引
+        }
+
+        // 点击模态框外部关闭
+        window.addEventListener('click', function(event) {
+            if (event.target.classList.contains('modal')) {
+                closeViewModal();
+                closeEditModal();
+            }
+        });
+    </script>
+</body>
+</html>

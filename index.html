@@ -1,0 +1,1892 @@
+<!DOCTYPE html>
+<html lang="zh" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>慧背 - 古诗词背诵助手</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=ZCOOL+XiaoWei&family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --ink-black: #0A0A0A;
+            --rice-paper: #FFF5E6;
+            --vermilion: #CB3B2F;
+            --celadon: #B8D8D8;
+            --gold-leaf: #D4AF37;
+            --moon-white: #F0F0F0;
+            --bamboo-green: #3A5F0B;
+            --mercedes-blue: #0066B2;
+            --blue-archive-pink: #FF66CC;
+            --apple-white: #FFFFFF;
+            --ink-blue: #2E4A66;
+            --cloud-white: #F8F9FA;
+            --scholar-green: #4A7C59;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'ZCOOL XiaoWei', 'Noto Serif SC', serif;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        body {
+            background: var(--rice-paper);
+            color: var(--ink-black);
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23FFF5E6"/><path d="M20,20 Q40,5 60,20 T100,20 M20,40 Q40,25 60,40 T100,40 M20,60 Q40,45 60,60 T100,60 M20,80 Q40,65 60,80 T100,80" stroke="%23E8E6E3" fill="none" stroke-width="0.5"/></svg>');
+        }
+
+        .right-controls {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            z-index: 999;
+        }
+
+        .right-controls .control-item {
+            width: 56px;
+            height: 56px;
+            background: var(--rice-paper);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .right-controls .control-item:hover {
+            transform: scale(1.05);
+            background: var(--moon-white);
+        }
+
+        .theme-toggle:hover {
+            box-shadow: 0 0 32px rgba(0, 102, 178, 0.3);
+        }
+
+        .font-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .personality-toggle {
+            width: 64px;
+            height: 64px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+        }
+
+        .personality-toggle:hover {
+            transform: translateY(-8px) scale(1.05);
+            background: var(--celadon);
+        }
+
+        .personality-dropdown {
+            top: 6rem;
+            right: 2rem;
+            left: auto;
+            transform: translateY(-20px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            border-radius: 24px;
+            overflow: hidden;
+            position: fixed;
+            width: 180px;
+            background: var(--rice-paper);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            z-index: 999;
+        }
+
+        .personality-dropdown.active {
+            transform: translateY(0);
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .personality-item {
+            padding: 1.2rem 2rem;
+            font-size: 1.1rem;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .personality-item:hover {
+            transform: translateX(10px);
+            color: var(--mercedes-blue);
+        }
+
+        .personality-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 102, 178, 0.1));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .personality-item:hover::before {
+            transform: scaleX(1);
+        }
+
+        .loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--rice-paper);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            animation: fadeOut 10s ease forwards;
+            z-index: 9999;
+        }
+
+		/* 移除/修改原有的加载动画遮罩伪元素（避免遮挡背景图片） */
+		.loader::before {
+		    display: none; /* 直接删除伪元素，或设置透明 */
+		    /* 若需保留动画但不遮挡，改为透明：
+		    content: '';
+		    position: absolute;
+		    width: 200%;
+		    height: 200%;
+		    background: transparent;
+		    animation: inkSpread 2s ease-out forwards;
+		    */
+		}
+        .loader .progress-bar {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 400px;
+            height: 8px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            margin-top: 2rem;
+        }
+
+        .loader .progress {
+            background: linear-gradient(90deg, var(--mercedes-blue), var(--blue-archive-pink));
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        @keyframes inkSpread {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+
+        @keyframes fadeOut {
+            0% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+                visibility: hidden;
+            }
+        }
+
+        .loader-logo {
+            font-family: 'Ma Shan Zheng', cursive;
+            font-size: 4.5rem;
+            color: var(--ink-black);
+            position: relative;
+            z-index: 1;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 4rem 6%;
+        }
+
+        .header {
+            position: relative;
+            padding: 6rem 0;
+            margin-bottom: 4rem;
+            overflow: hidden;
+            background: linear-gradient(135deg, rgba(0, 102, 178, 0.08) 0%, rgba(255, 102, 204, 0.05) 100%);
+            text-align: center;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: -1;
+        }
+
+        .title-wrapper {
+            position: relative;
+            display: inline-block;
+            padding: 0 3rem;
+        }
+
+        .title-wrapper::before,
+        .title-wrapper::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            width: 40px;
+            height: 100%;
+            background: var(--gold-leaf);
+            clip-path: polygon(0 0, 100% 10%, 100% 90%, 0 100%);
+        }
+
+        .title-wrapper::before {
+            left: -20px;
+        }
+
+        .title-wrapper::after {
+            right: -20px;
+        }
+
+        .title-wrapper h1 {
+            position: relative;
+            display: inline-block;
+            padding: 0 2rem;
+        }
+
+        .title-wrapper h1::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, var(--mercedes-blue) 30%, var(--blue-archive-pink) 70%, transparent);
+            transform: translateY(2rem);
+            opacity: 0.6;
+        }
+
+        .dashboard {
+            text-align: center;
+            padding: 4rem 0;
+        }
+
+        .story-button {
+            background: linear-gradient(135deg, var(--mercedes-blue), var(--blue-archive-pink));
+            color: white;
+            border: none;
+            padding: 2rem 4rem;
+            font-size: 2rem;
+            border-radius: 16px;
+            cursor: pointer;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .story-button:hover {
+            transform: translateY(-8px) scale(1.05);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .story-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+
+        .story-button:hover::before {
+            left: 100%;
+        }
+
+        .poetry-selection {
+            display: none;
+            margin-top: 3rem;
+        }
+
+        .poetry-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2.5rem;
+            margin: 2rem 0;
+        }
+
+        .poetry-card {
+            background: var(--rice-paper);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05), inset 0 -2px 12px rgba(0, 0, 0, 0.03);
+            transition: transform 0.4s, box-shadow 0.4s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid transparent;
+        }
+
+        .poetry-card:hover {
+            transform: translateY(-8px) rotateZ(-1deg);
+            box-shadow: 0 16px 48px rgba(202, 63, 50, 0.2), inset 0 -4px 16px rgba(0, 0, 0, 0.05);
+            border-color: var(--gold-leaf);
+        }
+
+        .poetry-card h3 {
+            color: var(--vermilion);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .poetry-card .author {
+            color: var(--ink-blue);
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .poetry-card .grade {
+            background: var(--celadon);
+            color: var(--ink-black);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: inline-block;
+        }
+
+        .recitation-view {
+            display: none;
+            margin-top: 3rem;
+        }
+
+        .recitation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--celadon);
+        }
+
+        .back-button {
+            background: var(--vermilion);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: #B83227;
+        }
+
+        .poem-content {
+            background: var(--cloud-white);
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            font-size: 1.2rem;
+            line-height: 2;
+            border-left: 5px solid var(--mercedes-blue);
+        }
+
+        .recite-controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin: 2rem 0;
+        }
+
+        .control-button {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .start-button {
+            background: var(--scholar-green);
+            color: white;
+        }
+
+        .pause-button {
+            background: var(--mercedes-blue);
+            color: white;
+        }
+
+        .stop-button {
+            background: var(--vermilion);
+            color: white;
+        }
+
+        .control-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .timer {
+            text-align: center;
+            font-size: 1.5rem;
+            margin: 1rem 0;
+            color: var(--ink-blue);
+        }
+
+        .chat-container {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05), inset 0 0 12px rgba(0, 0, 0, 0.03);
+            margin: 4rem 0;
+            min-height: 480px;
+            position: relative;
+        }
+
+        .chat-container::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            border-radius: 26px;
+            background: linear-gradient(135deg, rgba(202, 63, 50, 0.3) 0%, rgba(202, 63, 50, 0) 50%);
+            z-index: -1;
+        }
+
+        .bot-bubble {
+            background: var(--moon-white);
+            border-radius: 24px 24px 24px 4px;
+            padding: 1.8rem 2.4rem;
+            margin: 1.5rem 0;
+            max-width: 70%;
+            position: relative;
+            box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .bot-bubble::before {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 24px;
+            width: 20px;
+            height: 20px;
+            background: var(--moon-white);
+            transform: rotate(45deg);
+            box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.05);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%,
+            100% {
+                transform: translateY(-50%) scale(1) rotate(45deg);
+            }
+
+            50% {
+                transform: translateY(-50%) scale(1.1) rotate(45deg);
+            }
+        }
+
+        .user-bubble {
+            background: var(--celadon);
+            border-radius: 24px 24px 4px 24px;
+            padding: 1.8rem 2.4rem;
+            margin: 1.5rem 0;
+            max-width: 70%;
+            position: relative;
+            box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.05);
+            margin-left: auto;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 3rem;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 1.5rem 2.4rem;
+            border: 2px solid var(--celadon);
+            border-radius: 50px;
+            font-size: 1.1rem;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+        }
+
+        .send-button {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--vermilion);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .send-button:hover {
+            transform: rotate(-15deg) scale(1.1);
+            background: #B83227;
+        }
+
+        .send-button:hover i {
+            transform: translateX(2px) rotate(-30deg);
+        }
+
+        .send-button i {
+            transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+
+        [data-theme="dark"] body {
+            --ink-black: #E8E6E3;
+            --rice-paper: #1A1A1A;
+            --moon-white: #2D2D2D;
+            --celadon: #3A5F5F;
+            --mercedes-blue: #0088FF;
+            --blue-archive-pink: #FF88FF;
+            --cloud-white: #2A2A2A;
+            --ink-blue: #A0BFE0;
+        }
+
+        [data-theme="dark"] .header::after {
+            background: rgba(30, 30, 30, 0.7);
+        }
+
+        [data-theme="dark"] .poetry-card,
+        [data-theme="dark"] .chat-container {
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 0 12px rgba(255, 255, 255, 0.03);
+        }
+
+        [data-theme="dark"] .send-button {
+            box-shadow: 0 0 24px rgba(0, 136, 255, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 2rem 4%;
+            }
+
+            .poetry-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chat-container {
+                padding: 2rem;
+                min-height: 400px;
+            }
+
+            .title-wrapper h1 {
+                font-size: 2.5rem;
+            }
+
+            .header {
+                padding: 4rem 0 6rem;
+            }
+
+            .poetry-card {
+                transform: none !important;
+            }
+            
+            .story-button {
+                padding: 1.5rem 2rem;
+                font-size: 1.5rem;
+            }
+        }
+
+        .floating-ink {
+            position: fixed;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.1;
+            animation: floatFloatingInk 6s ease-in-out infinite;
+        }
+
+        @keyframes floatFloatingInk {
+            0%,
+            100% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-40px) rotate(10deg);
+            }
+        }
+
+        .progress-bar-poetry {
+            height: 8px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--mercedes-blue) 0%, var(--blue-archive-pink) 100%);
+            position: relative;
+        }
+
+        .progress::after {
+            content: '';
+            position: absolute;
+            right: -2px;
+            top: -4px;
+            width: 4px;
+            height: 16px;
+            background: var(--apple-white);
+            border-radius: 2px;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+        }
+
+        #message-box {
+            display: none;
+            position: fixed;
+            bottom: 2rem;
+            left: 2rem;
+            background: var(--rice-paper);
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            z-index: 999;
+        }
+        
+        /* Score window styles */
+        #score-window {
+            display: none;
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 300px;
+            background: var(--rice-paper);
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+            z-index: 1000;
+        }
+        
+        #score-toggle {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 56px;
+            height: 56px;
+            background: var(--mercedes-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            z-index: 999;
+        }
+        
+        /* Message Panel Styles */
+        .message-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            max-width: 400px;
+            height: 80vh;
+            background: var(--rice-paper);
+            border-radius: 20px;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            overflow: hidden;
+            transform: translate(-50%, -50%) scale(0.9);
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        .message-panel.active {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .message-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: none;
+            backdrop-filter: blur(4px);
+        }
+        
+        .message-overlay.active {
+            display: block;
+        }
+        
+        .message-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            background: var(--mercedes-blue);
+            color: white;
+            border-radius: 20px 20px 0 0;
+        }
+        
+        .message-panel-header h3 {
+            margin: 0;
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+        
+        .message-close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.2s ease;
+        }
+        
+        .message-close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .message-panel-body {
+            flex: 1;
+            overflow: hidden;
+            background: var(--rice-paper);
+        }
+        
+        .message-list {
+            height: 100%;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        /* Custom scrollbar for message list */
+        .message-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .message-list::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 3px;
+        }
+        
+        .message-list::-webkit-scrollbar-thumb {
+            background: rgba(0, 102, 178, 0.5);
+            border-radius: 3px;
+        }
+        
+        .message-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 102, 178, 0.7);
+        }
+        
+        .message-item {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            animation: slideInRight 0.3s ease-out;
+            border-left: 4px solid var(--mercedes-blue);
+        }
+        
+        .message-item.unread {
+            background: rgba(0, 102, 178, 0.05);
+            border-left-color: var(--blue-archive-pink);
+        }
+        
+        .message-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+        
+        .message-sender {
+            font-weight: bold;
+            color: var(--mercedes-blue);
+            font-size: 1rem;
+        }
+        
+        .message-time {
+            font-size: 0.8rem;
+            color: var(--gray-dark);
+        }
+        
+        .message-content {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: var(--ink-black);
+            margin-bottom: 0.5rem;
+        }
+        
+        .message-panel-footer {
+            padding: 1rem;
+            background: var(--moon-white);
+            border-top: 1px solid var(--gray-medium);
+            text-align: center;
+        }
+        
+        .message-footer-text {
+            margin: 0;
+            font-size: 0.85rem;
+            color: var(--gray-dark);
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .message-panel {
+                max-width: 100%;
+                height: 90vh;
+                border-radius: 16px 16px 0 0;
+            }
+            
+            .message-panel-header {
+                padding: 1.2rem 1.5rem;
+            }
+            
+            .message-list {
+                padding: 0.8rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .message-panel {
+                height: 95vh;
+            }
+            
+            .message-panel-header h3 {
+                font-size: 1.1rem;
+            }
+            
+            .message-close-btn {
+                font-size: 1.3rem;
+            }
+        }
+        
+        .score-history-item {
+            padding: 0.5rem;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9rem;
+        }
+        
+        .score-history-item:last-child {
+            border-bottom: none;
+        }
+        
+        .score-value {
+            font-weight: bold;
+            color: var(--mercedes-blue);
+        }
+        
+        .clear-scores-button {
+            background: var(--vermilion);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="loader">
+        <div class="loader-logo">慧背</div>
+        <div class="progress-bar" id="loading-progress">
+            <div class="progress" id="loading-bar" style="width: 0%"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header class="header">
+            <div class="title-wrapper">
+                <h1 class="loader-logo">慧背</h1>
+            </div>
+            <p class="tagline">云想衣裳花想容 春风拂槛露华浓</p>
+        </header>
+
+        <!-- Dashboard with story selection button -->
+        <div class="dashboard" id="dashboard">
+            <button class="story-button" onclick="showPoetrySelection()">
+                <i class="fas fa-book-open"></i> 选择古诗词开始背诵
+            </button>
+            <button class="story-button" onclick="window.location.href='家长端pro.html'" style="margin-top: 2rem; background: linear-gradient(135deg, var(--scholar-green), var(--celadon));">
+                <i class="fas fa-chart-bar"></i> 家长端
+            </button>
+
+        </div>
+
+        <!-- Poetry selection view -->
+        <div class="poetry-selection" id="poetry-selection">
+            <div class="recitation-header">
+                <h2>选择要背诵的古诗词</h2>
+                <button class="back-button" onclick="showDashboard()">
+                    <i class="fas fa-arrow-left"></i> 返回主界面
+                </button>
+            </div>
+            <div class="poetry-grid" id="poetry-grid">
+                <!-- Poetry cards will be dynamically generated here -->
+            </div>
+        </div>
+
+        <!-- Recitation view -->
+        <div class="recitation-view" id="recitation-view">
+            <div class="recitation-header">
+                <h2 id="current-poem-title">古诗词标题</h2>
+                <button class="back-button" onclick="showPoetrySelection()">
+                    <i class="fas fa-arrow-left"></i> 选择其他诗词
+                </button>
+            </div>
+            
+            <div class="poem-content" id="poem-content">
+                <!-- Poem content will be displayed here -->
+            </div>
+            
+            <div class="timer" id="timer">已用时：<span id="time-display">0:00</span></div>
+            
+            <div class="recite-controls">
+                <button class="control-button start-button" id="start-button" onclick="startRecitation()">
+                    <i class="fas fa-microphone"></i> 开始背诵
+                </button>
+                <button class="control-button pause-button" id="pause-button" onclick="pauseRecitation()" style="display: none;">
+                    <i class="fas fa-pause"></i> 暂停
+                </button>
+                <button class="control-button stop-button" id="stop-button" onclick="stopRecitation()" style="display: none;">
+                    <i class="fas fa-stop"></i> 结束背诵
+                </button>
+            </div>
+            
+            <div class="progress-bar-poetry">
+                <div class="progress" id="recitation-progress" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div class="chat-container" id="chat-container">
+            <div class="bot-bubble">
+                <span class="greeting">📜 见字如晤</span><br>
+                今日想研习哪首佳作？我可为您：
+                <ul class="function-list">
+                    <li>🖌️ 智能笔迹解析</li>
+                    <li>🎎 情境沉浸体验</li>
+                    <li>📜 古籍对照阅读</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <input type="text" class="chat-input" id="chat-input" placeholder="挥毫落纸如云烟...">
+            <button class="send-button" onclick="sendMessage()">
+                <i class="fas fa-feather-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="floating-ink" style="left:10%;top:20%">⿅</div>
+    <div class="floating-ink" style="right:15%;top:30%">鶴</div>
+    <div class="floating-ink" style="left:5%;bottom:15%">梅</div>
+
+    <div class="right-controls">
+        <div class="control-item theme-toggle" onclick="toggleTheme()">
+            <i class="fas fa-moon theme-icon" id="theme-icon"></i>
+        </div>
+        <div class="control-item font-controls">
+            <div class="font-button" onclick="increaseFontSize()">
+                <i class="fas fa-plus"></i>
+            </div>
+            <div class="font-button" onclick="decreaseFontSize()">
+                <i class="fas fa-minus"></i>
+            </div>
+        </div>
+        <div class="control-item personality-toggle" onclick="togglePersonalityDropdown()">
+            <i class="fas fa-user"></i>
+        </div>
+        <!--设置消息按钮-->
+        <div class="control-item message-toggle" onclick="toggleMessagePanel()">
+            <i class="fas fa-comments"></i>
+        </div>
+
+    </div>
+
+    <div class="personality-dropdown" id="personalityDropdown">
+        <div class="personality-item" data-personality="温柔书生">温柔书生</div>
+        <div class="personality-item" data-personality="豪放侠客">豪放侠客</div>
+        <div class="personality-item" data-personality="婉约才女">婉约才女</div>
+    </div>
+
+    <!-- Message Panel -->
+    <div id="message-panel" class="message-panel">
+        <div class="message-panel-header">
+            <h3>消息中心</h3>
+            <button class="message-close-btn" onclick="toggleMessagePanel()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="message-panel-body">
+            <div id="message-list" class="message-list">
+                <!-- Messages will be dynamically generated here -->
+            </div>
+        </div>
+        <div class="message-panel-footer">
+            <button id="refresh-messages-btn" class="refresh-button" style="background: var(--mercedes-blue); color: white; border: none; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; margin: 0 auto;">
+                <i class="fas fa-sync-alt"></i> 刷新消息
+            </button>
+        </div>
+    </div>
+    
+    <!-- Message Panel Overlay -->
+    <div id="message-overlay" class="message-overlay"></div>
+
+    <!-- Score display window -->
+    <div id="score-window">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="margin: 0; color: var(--mercedes-blue);">背诵评分</h3>
+            <button onclick="toggleScoreWindow()" style="background: none; border: none; cursor: pointer; font-size: 1.2rem;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="score-history" style="max-height: 200px; overflow-y: auto; margin-bottom: 1rem;">
+            <!-- Score history will be displayed here -->
+        </div>
+        <div>
+            <canvas id="score-chart" height="100"></canvas>
+        </div>
+        <div style="text-align: center; margin-top: 1rem;">
+            <button class="clear-scores-button" onclick="clearScoreHistory()">清空记录</button>
+        </div>
+    </div>
+
+    <!-- Score window toggle button -->
+    <div id="score-toggle" onclick="toggleScoreWindow()">
+        <i class="fas fa-chart-line" style="color: white;"></i>
+    </div>
+
+    <script>
+        // State management
+        let currentView = 'dashboard';
+        let currentPoem = null;
+        let recording = false;
+        let timerInterval = null;
+        let seconds = 0;
+        let scoreChart = null;
+        
+        // Floating ink animation
+        document.querySelectorAll('.floating-ink').forEach(el => {
+            el.style.animationDelay = `${Math.random() * 2}s`;
+            el.style.fontSize = `${40 + Math.random() * 20}px`;
+        });
+
+        // Initialize loading progress
+        let progress = 0;
+        const updateProgress = () => {
+            progress += Math.random() * 5 + 1;
+            if (progress >= 100) progress = 100;
+            document.getElementById('loading-bar').style.width = `${progress}%`;
+            if (progress < 100) {
+                requestAnimationFrame(updateProgress);
+            }
+        };
+        updateProgress();
+
+        // Personality dropdown
+        document.getElementById('personalityDropdown').addEventListener('click', (e) => {
+            if (e.target.classList.contains('personality-item')) {
+                const personality = e.target.dataset.personality;
+                showMessageBox(`已切换人格至 ${personality}`);
+                togglePersonalityDropdown();
+            }
+        });
+        // Message Panel Functions
+        let lastMessageId = 0;
+        
+        // Toggle message panel visibility
+        function toggleMessagePanel() {
+            const messagePanel = document.getElementById('message-panel');
+            const messageOverlay = document.getElementById('message-overlay');
+            
+            messagePanel.classList.toggle('active');
+            messageOverlay.classList.toggle('active');
+            
+            // Fetch messages when panel is opened
+            if (messagePanel.classList.contains('active')) {
+                fetchMessages();
+            }
+        }
+        
+        // Add click event for refresh button
+        document.addEventListener('DOMContentLoaded', function() {
+            const refreshBtn = document.getElementById('refresh-messages-btn');
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', function() {
+                    // 保存按钮引用
+                    const btn = this;
+                    
+                    // Show loading state
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 刷新中...';
+                    btn.disabled = true;
+                    
+                    // Fetch messages
+                    fetchMessages().finally(() => {
+                        // Restore button state after 1 second
+                        setTimeout(() => {
+                            btn.innerHTML = '<i class="fas fa-sync-alt"></i> 刷新消息';
+                            btn.disabled = false;
+                        }, 1000);
+                    });
+                });
+            }
+        });
+        
+        // Fetch messages, study plans, and tasks from parent's API
+        async function fetchMessages() {
+            try {
+                const userId = 'student_1'; // 简单处理，实际应用中应使用真实用户ID
+                const messages = [];
+                
+                // 获取学习计划
+                const plansResponse = await fetch(`http://127.0.0.1:5000/api/study-plan/${userId}`);
+                if (plansResponse.ok) {
+                    const plansData = await plansResponse.json();
+                    if (plansData.plans && plansData.plans.length > 0) {
+                        // 将学习计划转换为消息格式
+                        const planMessages = plansData.plans.map((plan, index) => {
+                            // 计算计划进度
+                            const totalStages = plan.schedule.length;
+                            const completedStages = plan.schedule.filter(stage => stage.completed).length;
+                            const completionRate = totalStages > 0 ? Math.round((completedStages / totalStages) * 100) : 0;
+                            
+                            return {
+                                id: Date.now() + index,
+                                type: 'plan',
+                                sender: '家长',
+                                content: `已为您创建学习计划：${plan.poem_title}<br><br>\n难度：${plan.difficulty}<br>预计总时长：${plan.required_time}分钟<br>进度：${completionRate}%<br><br>\n点击"家长端"按钮查看详细计划`,
+                                time: plan.now_date
+                            };
+                        });
+                        messages.push(...planMessages);
+                    }
+                }
+                
+                // 获取任务列表
+                const tasksResponse = await fetch(`http://127.0.0.1:5000/api/tasks/${userId}`);
+                if (tasksResponse.ok) {
+                    const tasksData = await tasksResponse.json();
+                    if (tasksData.tasks && tasksData.tasks.length > 0) {
+                        // 将任务转换为消息格式
+                        const taskMessages = tasksData.tasks.map((task, index) => {
+                            const status = task.completed ? '已完成' : '待完成';
+                            // 将任务类型转换为中文
+                            const taskTypeLabel = task.type === 'reminder' ? '督促消息' : '布置任务';
+                            return {
+                                id: Date.now() + 100 + index,
+                                type: 'task',
+                                sender: '家长',
+                                content: `为您布置了新任务：<br><br>\n类型：${taskTypeLabel}<br>内容：${task.content}<br>状态：${status}<br><br>\n请按时完成任务`,
+                                time: task.send_time
+                            };
+                        });
+                        messages.push(...taskMessages);
+                    }
+                }
+                
+                // 获取督促消息（这里模拟一些督促消息）
+                const reminderMessages = [
+                    {
+                        id: Date.now() - 2,
+                        type: 'reminder',
+                        sender: '家长',
+                        content: '今天要记得背诵古诗词哦！坚持就是胜利！',
+                        time: new Date(Date.now() - 3600000).toISOString() // 1小时前
+                    },
+                    {
+                        id: Date.now() - 1,
+                        type: 'reminder',
+                        sender: '家长',
+                        content: '坚持做一件小事不容易，但你做到了，继续保持，你会变成更优秀的小朋友。',
+
+                    }
+                ];
+                messages.push(...reminderMessages);
+                
+                // 添加一条欢迎消息
+                const welcomeMessage = {
+                    id: Date.now() - 3,
+                    type: 'welcome',
+                    sender: '家长',
+                    content: '欢迎使用慧背！家长已为您创建了学习计划和任务，请查看下方消息了解详情。',
+                    time: new Date().toISOString()
+                };
+                messages.unshift(welcomeMessage);
+                
+                // 按时间排序，最新的消息在最前面
+                const sortedMessages = messages.sort((a, b) => new Date(b.time) - new Date(a.time));
+                
+                if (sortedMessages.length > 0) {
+                    displayMessages(sortedMessages);
+                } else {
+                    // 如果没有消息，显示提示消息
+                    displayMessages([{
+                        id: Date.now(),
+                        type: 'info',
+                        sender: '家长',
+                        content: '暂无学习计划和任务，家长可通过家长端为您创建',
+                        time: new Date().toISOString()
+                    }]);
+                }
+            } catch (error) {
+                console.error('获取消息失败:', error);
+                // 显示错误消息
+                displayMessages([{
+                    id: Date.now(),
+                    type: 'error',
+                    sender: '系统',
+                    content: '获取消息失败，请检查网络连接或联系家长',
+                    time: new Date().toISOString()
+                }]);
+            }
+        }
+        
+        // Display messages in the message panel
+        function displayMessages(messages) {
+            const messageList = document.getElementById('message-list');
+            messageList.innerHTML = '';
+            
+            // Sort messages by time (newest first)
+            const sortedMessages = messages.sort((a, b) => new Date(b.time) - new Date(a.time));
+            
+            sortedMessages.forEach(message => {
+                addMessageToPanel(message);
+            });
+            
+            // Scroll to bottom of message list
+            scrollToBottom();
+        }
+        
+        // Add a single message to the panel
+        function addMessageToPanel(message) {
+            const messageList = document.getElementById('message-list');
+            const messageItem = document.createElement('div');
+            
+            // Check if message is unread
+            const isUnread = message.id > lastMessageId;
+            if (isUnread) {
+                lastMessageId = message.id;
+            }
+            
+            // Set message type and icon
+            let icon = '<i class="fas fa-envelope"></i>';
+            let typeClass = '';
+            
+            switch (message.type) {
+                case 'welcome':
+                    icon = '<i class="fas fa-handshake"></i>';
+                    typeClass = 'welcome';
+                    break;
+                case 'plan':
+                    icon = '<i class="fas fa-book"></i>';
+                    typeClass = 'plan';
+                    break;
+                case 'task':
+                    icon = '<i class="fas fa-tasks"></i>';
+                    typeClass = 'task';
+                    break;
+                case 'reminder':
+                    icon = '<i class="fas fa-bell"></i>';
+                    typeClass = 'reminder';
+                    break;
+                case 'info':
+                    icon = '<i class="fas fa-info-circle"></i>';
+                    typeClass = 'info';
+                    break;
+                case 'error':
+                    icon = '<i class="fas fa-exclamation-circle"></i>';
+                    typeClass = 'error';
+                    break;
+                default:
+                    icon = '<i class="fas fa-envelope"></i>';
+                    typeClass = 'message';
+            }
+            
+            messageItem.className = `message-item ${isUnread ? 'unread' : ''} ${typeClass}`;
+            
+            // Format time
+            const formattedTime = new Date(message.time).toLocaleTimeString('zh-CN', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            messageItem.innerHTML = `
+                <div class="message-item-header">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span class="message-icon" style="color: var(--mercedes-blue); font-size: 1.2rem;">${icon}</span>
+                        <span class="message-sender">${message.sender || '家长'}</span>
+                    </div>
+                    <span class="message-time">${formattedTime}</span>
+                </div>
+                <div class="message-content" style="margin-top: 0.5rem;">${message.content}</div>
+            `;
+            
+            messageList.appendChild(messageItem);
+        }
+        
+        // Add sample message for demo purposes
+        function addSampleMessage() {
+            const sampleMessage = {
+                id: Date.now(),
+                sender: '家长',
+                content: '孩子，今天要记得背诵古诗词哦！',
+                time: new Date().toISOString()
+            };
+            addMessageToPanel(sampleMessage);
+            scrollToBottom();
+        }
+        
+        // Scroll to bottom of message list
+        function scrollToBottom() {
+            const messageList = document.getElementById('message-list');
+            messageList.scrollTop = messageList.scrollHeight;
+        }
+        
+        // Close message panel when clicking on overlay
+        document.getElementById('message-overlay').addEventListener('click', toggleMessagePanel);
+
+        // Show message box
+        function showMessageBox(message) {
+            const messageBox = document.getElementById('message-box');
+            const content = document.getElementById('message-content');
+            content.textContent = message;
+            messageBox.style.display = 'block';
+            setTimeout(() => {
+                messageBox.style.display = 'none';
+            }, 2000);
+        }
+
+        // View navigation
+        function showDashboard() {
+            document.getElementById('dashboard').style.display = 'block';
+            document.getElementById('poetry-selection').style.display = 'none';
+            document.getElementById('recitation-view').style.display = 'none';
+            currentView = 'dashboard';
+        }
+
+        function showPoetrySelection() {
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('poetry-selection').style.display = 'block';
+            document.getElementById('recitation-view').style.display = 'none';
+            currentView = 'poetry-selection';
+            loadPoetryCards();
+        }
+
+       function showRecitationView(poem) {
+    fetch('http://127.0.0.1:5000/stop').catch(() => {});
+
+    currentPoem = poem;
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('poetry-selection').style.display = 'none';
+    document.getElementById('recitation-view').style.display = 'block';
+    currentView = 'recitation-view';
+
+    // Update UI with poem content
+    document.getElementById('current-poem-title').textContent = poem.title;
+    document.getElementById('poem-content').innerHTML = `        <div style="text-align: center; margin-bottom: 1rem;">
+            <h3>${poem.title}</h3>
+            <p style="color: var(--ink-blue);">【${poem.dynasty}】${poem.author}</p>
+        </div>
+        <div style="font-size: 1.3rem; line-height: 2; text-align: center;">
+            ${poem.content.replace(/\n/g, '<br>')}        </div>
+        <div style="margin-top: 2rem; padding: 1rem; background: var(--moon-white); border-radius: 8px; font-size: 0.9rem;">
+            <p><strong>译文：</strong>${poem.translation}</p>
+        </div>
+    `;
+
+    // 发送诗歌信息到后端并获取会话ID
+    fetch('http://127.0.0.1:5000/api/current-poem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            title: poem.title,
+            author: poem.author,
+            dynasty: poem.dynasty,
+            content: poem.content
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log('当前诗歌信息已发送:', data);
+        // 存储会话ID供后续使用
+        currentPoem.sessionId = data.session_id;
+    })
+    .catch(error => console.error('发送诗歌信息到后端失败:', error));
+
+    // Reset timer and controls
+    resetTimer();
+    document.getElementById('start-button').style.display = 'inline-block';
+    document.getElementById('pause-button').style.display = 'none';
+    document.getElementById('stop-button').style.display = 'none';
+}
+
+        // Load poetry cards
+        async function loadPoetryCards() {
+            const poetryGrid = document.getElementById('poetry-grid');
+            poetryGrid.innerHTML = '<div style="text-align: center; grid-column: 1 / -1; padding: 2rem;">加载中...</div>';
+            
+            try {
+                const response = await fetch('http://127.0.0.1:5000/api/poems');
+                if (response.ok) {
+                    const data = await response.json();
+                    poetryGrid.innerHTML = '';
+                    
+                    data.poems.forEach(poem => {
+                        const card = document.createElement('div');
+                        card.className = 'poetry-card';
+                        card.innerHTML = `
+                            <h3>${poem.title}</h3>
+                            <div class="author">【${poem.dynasty}】${poem.author}</div>
+                            <div class="grade">${poem.grade}</div>
+                            <div style="margin-top: 1rem; font-size: 0.9rem; color: #666;">
+                                ${poem.content.split('\n')[0]}...
+                            </div>
+                        `;
+                        card.addEventListener('click', () => showRecitationView(poem));
+                        poetryGrid.appendChild(card);
+                    });
+                } else {
+                    throw new Error('Failed to fetch poems');
+                }
+            } catch (error) {
+                console.error('获取诗词数据失败:', error);
+                poetryGrid.innerHTML = '<div style="text-align: center; grid-column: 1 / -1; padding: 2rem; color: var(--vermilion);">加载诗词数据失败，请检查服务器是否运行</div>';
+            }
+        }
+
+        // Timer functions
+        function startTimer() {
+            seconds = 0;
+            timerInterval = setInterval(() => {
+                seconds++;
+                const minutes = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                document.getElementById('time-display').textContent = `${minutes}:${secs.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function resetTimer() {
+            stopTimer();
+            seconds = 0;
+            document.getElementById('time-display').textContent = '0:00';
+        }
+
+        // Recitation controls
+        async function startRecitation() {
+            try {
+                // Start recording via backend
+                const response = await fetch('http://127.0.0.1:5000/start');
+                if (!response.ok) throw new Error('无法启动语音识别');
+                
+                recording = true;
+                document.getElementById('start-button').style.display = 'none';
+                document.getElementById('pause-button').style.display = 'inline-block';
+                document.getElementById('stop-button').style.display = 'inline-block';
+                
+                startTimer();
+                showMessageBox('开始背诵，请大声朗读古诗词');
+            } catch (error) {
+                console.error('启动失败:', error);
+                showMessageBox('启动语音识别失败');
+            }
+        }
+
+        function pauseRecitation() {
+            // In a real implementation, we would pause the recording
+            recording = false;
+            stopTimer();
+            document.getElementById('start-button').style.display = 'inline-block';
+            document.getElementById('pause-button').style.display = 'none';
+            showMessageBox('背诵已暂停');
+        }
+
+        async function stopRecitation() {
+            try {
+                // Stop recording via backend
+                const response = await fetch('http://127.0.0.1:5000/stop');
+                if (!response.ok) throw new Error('无法停止语音识别');
+                
+                const result = await response.json();
+                const recognizedText = result.结果;
+                
+                recording = false;
+                stopTimer();
+                
+                document.getElementById('start-button').style.display = 'inline-block';
+                document.getElementById('pause-button').style.display = 'none';
+                document.getElementById('stop-button').style.display = 'none';
+                
+                // Get AI evaluation
+                await getAIEvaluation(recognizedText);
+                
+                showMessageBox('背诵结束，正在获取评价...');
+            } catch (error) {
+                console.error('停止失败:', error);
+                showMessageBox('停止语音识别失败');
+            }
+        }
+
+        // AI evaluation
+        async function getAIEvaluation(recognizedText) {
+    if (!recognizedText || !recognizedText.trim()) {
+        showMessageBox('未检测到背诵内容');
+        return;
+    }
+
+    try {
+        // Send to AI for evaluation
+        const formData = new FormData();
+        formData.append('message', recognizedText);
+        formData.append('title', currentPoem.title);
+        formData.append('author', currentPoem.author);
+        formData.append('dynasty', currentPoem.dynasty);
+
+        // 添加会话ID
+        if (currentPoem.sessionId) {
+            formData.append('session_id', currentPoem.sessionId);
+        }
+
+        const response = await fetch('http://127.0.0.1:5000/api/chat', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (response.ok) {
+            const aiReply = await response.text();
+
+            // Create user message bubble
+            const userBubble = document.createElement('div');
+            userBubble.className = 'user-bubble';
+            userBubble.innerHTML = `                <div style="color: var(--vermilion); margin-bottom: 5px;">
+                    <i class="fas fa-microphone"></i> 我的背诵
+                </div>
+                ${recognizedText}            `;
+            document.getElementById('chat-container').appendChild(userBubble);
+
+            // Create AI reply bubble
+            const botBubble = document.createElement('div');
+            botBubble.className = 'bot-bubble';
+            botBubble.innerHTML = `                <div style="color: var(--mercedes-blue); margin-bottom: 5px;">
+                    <i class="fas fa-robot"></i> 背诵评价 - ${currentPoem.title}                </div>
+                ${aiReply}            `;
+            document.getElementById('chat-container').appendChild(botBubble);
+
+            // Scroll to bottom
+            const chatContainer = document.getElementById('chat-container');
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            // Update scores
+            updateScores();
+        }
+    } catch (error) {
+        console.error('AI评价失败:', error);
+        showMessageBox('获取评价失败，请重试');
+    }
+}
+
+
+        // Score tracking
+        function updateScores() {
+            // In a real implementation, this would fetch scores from the backend
+            // For now, we'll simulate updating the score display
+            fetchAndDisplayScores();
+        }
+
+        // Score window functions
+        function toggleScoreWindow() {
+            const scoreWindow = document.getElementById('score-window');
+            const scoreToggle = document.getElementById('score-toggle');
+            
+            if (scoreWindow.style.display === 'none') {
+                scoreWindow.style.display = 'block';
+                scoreToggle.style.display = 'none';
+                fetchAndDisplayScores();
+            } else {
+                scoreWindow.style.display = 'none';
+                scoreToggle.style.display = 'flex';
+            }
+        }
+
+        async function fetchAndDisplayScores() {
+            try {
+                const response = await fetch('http://127.0.0.1:5000/api/scores');
+                if (response.ok) {
+                    const data = await response.json();
+                    displayScores(data.scores);
+                    updateScoreChart(data.scores);
+                }
+            } catch (error) {
+                console.error('获取分数失败:', error);
+            }
+        }
+
+        function displayScores(scores) {
+            const scoreHistory = document.getElementById('score-history');
+            scoreHistory.innerHTML = '';
+            
+            if (scores.length === 0) {
+                scoreHistory.innerHTML = '<p style="text-align: center; color: #999;">暂无评分记录</p>';
+                return;
+            }
+            
+            // Reverse to show newest first
+            scores.slice().reverse().forEach(scoreObj => {
+                const scoreElement = document.createElement('div');
+                scoreElement.className = 'score-history-item';
+                scoreElement.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="score-value">得分: ${scoreObj.score}分</span>
+                        <span style="color: #999;">${new Date(scoreObj.time).toLocaleTimeString('zh-CN', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        })}</span>
+                    </div>
+                    <div style="margin-top: 0.3rem; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        ${scoreObj.feedback.substring(0, 50)}${scoreObj.feedback.length > 50 ? '...' : ''}
+                    </div>
+                `;
+                scoreHistory.appendChild(scoreElement);
+            });
+        }
+
+        function updateScoreChart(scores) {
+            const ctx = document.getElementById('score-chart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (scoreChart) {
+                scoreChart.destroy();
+            }
+            
+            // Prepare chart data
+            const labels = scores.map((_, index) => `第${index + 1}次`);
+            const data = scores.map(scoreObj => scoreObj.score);
+            
+            // Create new chart
+            scoreChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '背诵评分趋势',
+                        data: data,
+                        borderColor: '#0066B2',
+                        backgroundColor: 'rgba(0, 102, 178, 0.1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#FF66CC',
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 100,
+                            ticks: {
+                                stepSize: 20
+                            },
+                            title: {
+                                display: true,
+                                text: '分数'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: '背诵次数'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        async function clearScoreHistory() {
+            try {
+                const response = await fetch('http://127.0.0.1:5000/api/clear_scores', {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    document.getElementById('score-history').innerHTML = '<p style="text-align: center; color: #999;">暂无评分记录</p>';
+                    updateScoreChart([]);
+                    showMessageBox('评分记录已清空');
+                }
+            } catch (error) {
+                console.error('清空分数失败:', error);
+                showMessageBox('清空评分记录失败');
+            }
+        }
+
+        // Theme toggle
+        function toggleTheme() {
+            const html = document.documentElement;
+            const themeIcon = document.getElementById('theme-icon');
+            if (html.dataset.theme === 'light') {
+                html.dataset.theme = 'dark';
+                themeIcon.classList.replace('fa-moon', 'fa-sun');
+            } else {
+                html.dataset.theme = 'light';
+                themeIcon.classList.replace('fa-sun', 'fa-moon');
+            }
+        }
+
+        // Font size adjustment
+        function increaseFontSize() {
+            document.documentElement.style.fontSize =
+                `${parseFloat(getComputedStyle(document.documentElement).fontSize) + 1}px`;
+        }
+
+        function decreaseFontSize() {
+            const currentSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+            if (currentSize > 10) {
+                document.documentElement.style.fontSize = `${currentSize - 1}px`;
+            }
+        }
+
+        // Personality dropdown
+        function togglePersonalityDropdown() {
+            document.getElementById('personalityDropdown').classList.toggle('active');
+        }
+
+        // Send message
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            if (!message) return;
+
+            const userBubble = document.createElement('div');
+            userBubble.className = 'user-bubble';
+            userBubble.textContent = message;
+            document.getElementById('chat-container').appendChild(userBubble);
+            input.value = '';
+
+            try {
+                const formData = new FormData();
+                formData.append('message', message);
+                
+                const response = await fetch('http://127.0.0.1:5000/api/chat', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const reply = await response.text();
+                    if (reply.trim()) {
+                        const botBubble = document.createElement('div');
+                        botBubble.className = 'bot-bubble';
+                        botBubble.textContent = reply;
+                        document.getElementById('chat-container').appendChild(botBubble);
+                        
+                        // Scroll to bottom
+                        const chatContainer = document.getElementById('chat-container');
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                    }
+                }
+            } catch (error) {
+                console.error('获取聊天回复失败:', error);
+            }
+        }
+
+        // Periodically update scores
+        setInterval(fetchAndDisplayScores, 10000);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="zh" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>慧背</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=ZCOOL+XiaoWei&family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink-black: #0A0A0A;
+            --rice-paper: #FFF5E6;
+            --vermilion: #CB3B2F;
+            --celadon: #B8D8D8;
+            --gold-leaf: #D4AF37;
+            --moon-white: #F0F0F0;
+            --bamboo-green: #3A5F0B;
+            --mercedes-blue: #0066B2;
+            --blue-archive-pink: #FF66CC;
+            --apple-white: #FFFFFF;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'ZCOOL XiaoWei', 'Noto Serif SC', serif;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        body {
+            background: var(--rice-paper);
+            color: var(--ink-black);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .right-controls {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            z-index: 999;
+        }
+
+        .right-controls .control-item {
+            width: 56px;
+            height: 56px;
+            background: var(--rice-paper);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .right-controls .control-item:hover {
+            transform: scale(1.05);
+            background: var(--moon-white);
+        }
+
+        .theme-toggle:hover {
+            box-shadow: 0 0 32px rgba(0, 102, 178, 0.3);
+        }
+
+        .font-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .personality-toggle {
+            width: 64px;
+            height: 64px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+        }
+
+        .personality-toggle:hover {
+            transform: translateY(-8px) scale(1.05);
+            background: var(--celadon);
+        }
+
+        .personality-dropdown {
+            top: 6rem;
+            right: 2rem;
+            left: auto;
+            transform: translateY(-20px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            border-radius: 24px;
+            overflow: hidden;
+            position: fixed;
+            width: 180px;
+            background: var(--rice-paper);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            z-index: 999;
+        }
+
+        .personality-dropdown.active {
+            transform: translateY(0);
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .personality-item {
+            padding: 1.2rem 2rem;
+            font-size: 1.1rem;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .personality-item:hover {
+            transform: translateX(10px);
+            color: var(--mercedes-blue);
+        }
+
+        .personality-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 102, 178, 0.1));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .personality-item:hover::before {
+            transform: scaleX(1);
+        }
+
+
+		.loader {
+		    position: fixed;
+		    top: 0;
+		    left: 0;
+		    width: 100%;
+		    height: 100%;
+		    /* 替换为你的本地图片（移除原有背景色，仅保留图片） */
+		    background: url('./your-image-url.jpg') no-repeat center center/cover;
+		    display: flex;
+		    align-items: center;
+		    justify-content: center;
+		    flex-direction: column;
+		    animation: fadeOut 10s ease forwards;
+		    /* 新增：确保子元素在上层，伪元素不遮挡 */
+		    z-index: 9999;
+		}
+
+		/* 移除/修改原有的加载动画遮罩伪元素（避免遮挡背景图片） */
+		.loader::before {
+		    display: none; /* 直接删除伪元素，或设置透明 */
+		    /* 若需保留动画但不遮挡，改为透明：
+		    content: '';
+		    position: absolute;
+		    width: 200%;
+		    height: 200%;
+		    background: transparent;
+		    animation: inkSpread 2s ease-out forwards;
+		    */
+		}
+        .loader .progress-bar {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 400px;
+            height: 8px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            margin-top: 2rem;
+        }
+
+        .loader .progress {
+            background: linear-gradient(90deg, var(--mercedes-blue), var(--blue-archive-pink));
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+
+
+        @keyframes inkSpread {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+
+        @keyframes fadeOut {
+            0% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+                visibility: hidden;
+            }
+        }
+
+        .loader-logo {
+            font-family: 'Ma Shan Zheng', cursive;
+            font-size: 4.5rem;
+            color: var(--ink-black);
+            position: relative;
+            z-index: 1;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 4rem 6%;
+        }
+
+        .header {
+            position: relative;
+            padding: 6rem 0;
+            margin-bottom: 4rem;
+            overflow: hidden;
+            background: linear-gradient(135deg, rgba(0, 102, 178, 0.08) 0%, rgba(255, 102, 204, 0.05) 100%);
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: -1;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120%;
+            height: 120%;
+            background: url('data:image/svg+xml;utf8,<svg...>') repeat;
+            opacity: 0.1;
+            pointer-events: none;
+        }
+
+        .title-wrapper {
+            position: relative;
+            display: inline-block;
+            padding: 0 3rem;
+        }
+
+        .title-wrapper::before,
+        .title-wrapper::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            width: 40px;
+            height: 100%;
+            background: var(--gold-leaf);
+            clip-path: polygon(0 0, 100% 10%, 100% 90%, 0 100%);
+        }
+
+        .title-wrapper::before {
+            left: -20px;
+        }
+
+        .title-wrapper::after {
+            right: -20px;
+        }
+
+        .title-wrapper h1 {
+            position: relative;
+            display: inline-block;
+            padding: 0 2rem;
+        }
+
+        .title-wrapper h1::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, var(--mercedes-blue) 30%, var(--blue-archive-pink) 70%, transparent);
+            transform: translateY(2rem);
+            opacity: 0.6;
+        }
+
+        .poetry-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2.5rem;
+            margin: 4rem 0;
+        }
+
+        .poetry-card {
+            background: var(--rice-paper);
+            border-radius: 12px;
+            padding: 2.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05), inset 0 -2px 12px rgba(0, 0, 0, 0.03);
+            transition: transform 0.4s, box-shadow 0.4s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .poetry-card::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            width: 80px;
+            height: 80px;
+            background: url('data:image/svg+xml;utf8,<svg ...>') no-repeat;
+            opacity: 0.1;
+            transition: all 0.5s ease;
+        }
+
+        .poetry-card:hover {
+            transform: translateY(-8px) rotateZ(-1deg);
+            box-shadow: 0 16px 48px rgba(202, 63, 50, 0.2), inset 0 -4px 16px rgba(0, 0, 0, 0.05);
+        }
+
+        .poetry-card::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            right: -30%;
+            width: 80%;
+            height: 80%;
+            background: linear-gradient(45deg, rgba(202, 63, 50, 0.08) 0%, rgba(202, 63, 50, 0) 50%);
+            transform: rotate(45deg);
+            pointer-events: none;
+        }
+
+        .chat-container {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05), inset 0 0 12px rgba(0, 0, 0, 0.03);
+            margin: 4rem 0;
+            min-height: 480px;
+            position: relative;
+        }
+
+        .chat-container::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            border-radius: 26px;
+            background: linear-gradient(135deg, rgba(202, 63, 50, 0.3) 0%, rgba(202, 63, 50, 0) 50%);
+            z-index: -1;
+        }
+
+        .bot-bubble {
+            background: var(--moon-white);
+            border-radius: 24px 24px 24px 4px;
+            padding: 1.8rem 2.4rem;
+            margin: 1.5rem 0;
+            max-width: 70%;
+            position: relative;
+            box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .bot-bubble::before {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 24px;
+            width: 20px;
+            height: 20px;
+            background: var(--moon-white);
+            transform: rotate(45deg);
+            box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.05);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%,
+            100% {
+                transform: translateY(-50%) scale(1);
+            }
+
+            50% {
+                transform: translateY(-50%) scale(1.1);
+            }
+        }
+
+        .user-bubble {
+            background: var(--celadon);
+            border-radius: 24px 24px 4px 24px;
+            padding: 1.8rem 2.4rem;
+            margin: 1.5rem 0;
+            max-width: 70%;
+            position: relative;
+            box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.05);
+            margin-left: auto;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 3rem;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 1.5rem 2.4rem;
+            border: 2px solid var(--celadon);
+            border-radius: 50px;
+            font-size: 1.1rem;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+        }
+
+
+
+        .button-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px; /* 按钮之间的间距 */
+    padding: 20px;
+}
+
+/* 圆形按钮基础样式 */
+.circle-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%; /* 圆形 */
+    border: none;
+    background-color: #f0f0f0; /* 浅灰色背景 */
+    color: #333; /* 图标颜色 */
+    font-size: 20px; /* 图标大小 */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative; /* 为消息徽章定位 */
+    transition: all 0.2s;
+}
+
+/* 按钮hover效果（可选） */
+.circle-btn:hover {
+    background-color: #e0e0e0;
+    transform: scale(1.05);
+}
+
+/* 消息徽章样式 */
+#messageBadge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: red;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+        .send-button {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--vermilion);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .send-button:hover {
+            transform: rotate(-15deg) scale(1.1);
+            background: #B83227;
+        }
+
+        .send-button:hover i {
+            transform: translateX(2px) rotate(-30deg);
+        }
+
+        .send-button i {
+            transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+
+        [data-theme="dark"] body {
+            --ink-black: #E8E6E3;
+            --rice-paper: #1A1A1A;
+            --moon-white: #2D2D2D;
+            --celadon: #3A5F5F;
+            --mercedes-blue: #0088FF;
+            --blue-archive-pink: #FF88FF;
+        }
+
+        [data-theme="dark"] .header::after {
+            background: rgba(30, 30, 30, 0.7);
+        }
+
+        [data-theme="dark"] .poetry-card,
+        [data-theme="dark"] .chat-container {
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 0 12px rgba(255, 255, 255, 0.03);
+        }
+
+        [data-theme="dark"] .send-button {
+            box-shadow: 0 0 24px rgba(0, 136, 255, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 2rem 4%;
+            }
+
+            .poetry-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chat-container {
+                padding: 2rem;
+                min-height: 400px;
+            }
+
+            .title-wrapper h1 {
+                font-size: 2.5rem;
+            }
+
+            .header {
+                padding: 4rem 0 6rem;
+            }
+
+            .poetry-card {
+                transform: none !important;
+            }
+        }
+
+        .floating-ink {
+            position: fixed;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.1;
+            animation: floatFloatingInk 6s ease-in-out infinite;
+        }
+
+        @keyframes floatFloatingInk {
+            0%,
+            100% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-40px) rotate(10deg);
+            }
+        }
+
+        .progress-bar-poetry {
+            height: 8px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--mercedes-blue) 0%, var(--blue-archive-pink) 100%);
+            position: relative;
+        }
+
+        .progress::after {
+            content: '';
+            position: absolute;
+            right: -2px;
+            top: -4px;
+            width: 4px;
+            height: 16px;
+            background: var(--apple-white);
+            border-radius: 2px;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+        }
+
+        .recite-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .recite-buttons button {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            background: var(--vermilion);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .recite-buttons button:hover {
+            background: #B83227;
+        }
+
+        .timer {
+            margin-top: 1rem;
+            font-size: 1.2rem;
+            display: none;
+        }
+
+        #message-box {
+            display: none;
+            position: fixed;
+            bottom: 2rem;
+            left: 2rem;
+            background: var(--rice-paper);
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            z-index: 999;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="loader">
+        <div class="loader-logo">慧背</div>
+        <div class="progress-bar" id="loading-progress">
+            <div class="progress" id="loading-bar" style="width: 0%"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header class="header">
+            <div class="title-wrapper">
+                <h1 class="loader-logo">慧背</h1>
+            </div>
+            <p class="tagline">云想衣裳花想容 春风拂槛露华浓</p>
+        </header>
+
+        <div class="poetry-grid">
+            <div class="poetry-card" onclick="selectPoetry('《咏鹅》')">
+                <div class="card-header">
+                    <span class="poetry-era">唐·骆宾王</span>
+                    <h3 class="poetry-title">《咏鹅》</h3>
+                </div>
+                <p class="poetry-content" id="content-《咏鹅》">鹅，鹅，鹅，曲项向天歌。<br>白毛浮绿水，红掌拨清波。<br><small>七岁神童用色彩明快的笔触勾勒出白鹅戏水的灵动画面。</small></p>
+                <div class="progress-bar-poetry">
+                    <div class="progress" style="width: 0%"></div>
+                </div>
+                <div class="recite-buttons" id="recite-buttons-《咏鹅》">
+                    <button id="start-pause-《咏鹅》" onclick="startOrPauseRecite('《咏鹅》', event)">开始</button>
+                    <button onclick="giveUpRecite('《咏鹅》', event)">放弃</button>
+                    <button onclick="endRecite('《咏鹅》', event)">结束</button>
+                    <button onclick="returnToSelect('《咏鹅》', event)">返回</button>
+                </div>
+                <div class="timer" id="timer-《咏鹅》">已用时：<span id="time-《咏鹅》">0:00</span></div>
+            </div>
+
+            <div class="poetry-card" onclick="selectPoetry('《静夜思》')">
+                <div class="card-header">
+                    <span class="poetry-era">唐·李白</span>
+                    <h3 class="poetry-title">《静夜思》</h3>
+                </div>
+                <p class="poetry-content" id="content-《静夜思》">床前明月光，疑是地上霜。<br>举头望明月，低头思故乡。<br><small>月光化作游子的乡愁，展现古典诗歌含蓄隽永之美。</small></p>
+                <div class="progress-bar-poetry">
+                    <div class="progress" style="width: 0%"></div>
+                </div>
+                <div class="recite-buttons" id="recite-buttons-《静夜思》">
+                    <button id="start-pause-《静夜思》" onclick="startOrPauseRecite('《静夜思》', event)">开始</button>
+                    <button onclick="giveUpRecite('《静夜思》', event)">放弃</button>
+                    <button onclick="endRecite('《静夜思》', event)">结束</button>
+                    <button onclick="returnToSelect('《静夜思》', event)">返回</button>
+                </div>
+                <div class="timer" id="timer-《静夜思》">已用时：<span id="time-《静夜思》">0:00</span></div>
+            </div>
+
+            <div class="poetry-card" onclick="selectPoetry('《春晓》')">
+                <div class="card-header">
+                    <span class="poetry-era">唐·孟浩然</span>
+                    <h3 class="poetry-title">《春晓》</h3>
+                </div>
+                <p class="poetry-content" id="content-《春晓》">春眠不觉晓，处处闻啼鸟。<br>夜来风雨声，花落知多少。<br><small>用听觉串联起春日晨醒的细腻感受，暗藏时光流转的哲思。</small></p>
+                <div class="progress-bar-poetry">
+                    <div class="progress" style="width: 0%"></div>
+                </div>
+                <div class="recite-buttons" id="recite-buttons-《春晓》">
+                    <button id="start-pause-《春晓》" onclick="startOrPauseRecite('《春晓》', event)">开始</button>
+                    <button onclick="giveUpRecite('《春晓》', event)">放弃</button>
+                    <button onclick="endRecite('《春晓》', event)">结束</button>
+                    <button onclick="returnToSelect('《春晓》', event)">返回</button>
+                </div>
+                <div class="timer" id="timer-《春晓》">已用时：<span id="time-《春晓》">0:00</span></div>
+            </div>
+
+            <div class="poetry-card" onclick="selectPoetry('《登鹳雀楼》')">
+                <div class="card-header">
+                    <span class="poetry-era">唐·王之涣</span>
+                    <h3 class="poetry-title">《登鹳雀楼》</h3>
+                </div>
+                <p class="poetry-content" id="content-《登鹳雀楼》">白日依山尽，黄河入海流。<br>欲穷千里目，更上一层楼。<br><small>登高望远的壮阔景象，孕育着积极进取的人生智慧。</small></p>
+                <div class="progress-bar-poetry">
+                    <div class="progress" style="width: 0%"></div>
+                </div>
+                <div class="recite-buttons" id="recite-buttons-《登鹳雀楼》">
+                    <button id="start-pause-《登鹳雀楼》" onclick="startOrPauseRecite('《登鹳雀楼》', event)">开始</button>
+                    <button onclick="giveUpRecite('《登鹳雀楼》', event)">放弃</button>
+                    <button onclick="endRecite('《登鹳雀楼》', event)">结束</button>
+                    <button onclick="returnToSelect('《登鹳雀楼》', event)">返回</button>
+                </div>
+                <div class="timer" id="timer-《登鹳雀楼》">已用时：<span id="time-《登鹳雀楼》">0:00</span></div>
+            </div>
+
+            <div class="poetry-card" onclick="selectPoetry('《风》')">
+                <div class="card-header">
+                    <span class="poetry-era">唐·李峤</span>
+                    <h3 class="poetry-title">《风》</h3>
+                </div>
+                <p class="poetry-content" id="content-《风》">解落三秋叶，能开二月花。<br>过江千尺浪，入竹万竿斜。<br><small>以动态描写诠释无形之风，展现诗人独特的观察视角。</small></p>
+                <div class="progress-bar-poetry">
+                    <div class="progress" style="width: 0%"></div>
+                </div>
+                <div class="recite-buttons" id="recite-buttons-《风》">
+                    <button id="start-pause-《风》" onclick="startOrPauseRecite('《风》', event)">开始</button>
+                    <button onclick="giveUpRecite('《风》', event)">放弃</button>
+                    <button onclick="endRecite('《风》', event)">结束</button>
+                    <button onclick="returnToSelect('《风》', event)">返回</button>
+                </div>
+                <div class="timer" id="timer-《风》">已用时：<span id="time-《风》">0:00</span></div>
+            </div>
+
+            <div class="poetry-card" onclick="selectPoetry('《画》')">
+                <div class="card-header">
+                    <span class="poetry-era">唐·王维</span>
+                    <h3 class="poetry-title">《画》</h3>
+                </div>
+                <p class="poetry-content" id="content-《画》">远看山有色，近听水无声。<br>春去花还在，人来鸟不惊。<br><small>通过矛盾修辞展现绘画艺术魅力，启蒙艺术审美意识。</small></p>
+                <div class="progress-bar-poetry">
+                    <div class="progress" style="width: 0%"></div>
+                </div>
+                <div class="recite-buttons" id="recite-buttons-《画》">
+                    <button id="start-pause-《画》" onclick="startOrPauseRecite('《画》', event)">开始</button>
+                    <button onclick="giveUpRecite('《画》', event)">放弃</button>
+                    <button onclick="endRecite('《画》', event)">结束</button>
+                    <button onclick="returnToSelect('《画》', event)">返回</button>
+                </div>
+                <div class="timer" id="timer-《画》">已用时：<span id="time-《画》">0:00</span></div>
+            </div>
+        </div>
+
+        <div class="chat-container" id="chat-container">
+            <div class="bot-bubble">
+                <span class="greeting">📜 见字如晤</span><br>
+                今日想研习哪首佳作？我可为您：
+                <ul class="function-list">
+                    <li>🖌️ 智能笔迹解析</li>
+                    <li>🎎 情境沉浸体验</li>
+                    <li>📜 古籍对照阅读</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <input type="text" class="chat-input" id="chat-input" placeholder="挥毫落纸如云烟...">
+            <button class="send-button" onclick="sendMessage()">
+                <i class="fas fa-feather-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="floating-ink" style="left:10%;top:20%">⿅</div>
+    <div class="floating-ink" style="right:15%;top:30%">鶴</div>
+    <div class="floating-ink" style="left:5%;bottom:15%">梅</div>
+
+    <div class="right-controls">
+        <div class="control-item theme-toggle" onclick="toggleTheme()">
+            <i class="fas fa-moon theme-icon" id="theme-icon"></i>
+        </div>
+        <div class="control-item font-controls">
+            <div class="font-button" onclick="increaseFontSize()">
+                <i class="fas fa-plus"></i>
+            </div>
+            <div class="font-button" onclick="decreaseFontSize()">
+                <i class="fas fa-minus"></i>
+            </div>
+        </div>
+        <div class="control-item personality-toggle" onclick="togglePersonalityDropdown()">
+            <i class="fas fa-user"></i>
+        </div>
+    </div>
+
+    <div class="personality-dropdown" id="personalityDropdown">
+        <div class="personality-item" data-personality="温柔书生">温柔书生</div>
+        <div class="personality-item" data-personality="豪放侠客">豪放侠客</div>
+        <div class="personality-item" data-personality="婉约才女">婉约才女</div>
+    </div>
+
+    <div id="message-box">
+        <p id="message-content"></p>
+    </div>
+
+    <div class="button-group">
+    <!-- 新增消息按钮（放在最下方） -->
+        <button class="circle-btn message-btn" id="messageBtn" title="消息">
+            <i class="fas fa-bell"></i>
+            <span id="messageBadge">0</span>
+        </button>
+    </div>
+
+    <!-- 消息列表模态框 -->
+    <div class="modal" id="messageModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000;">
+        <div class="modal-content" style="background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto;">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3>消息列表</h3>
+                <button onclick="document.getElementById('messageModal').style.display='none'">&times;</button>
+            </div>
+            <div id="messageList" style="margin-bottom: 20px;">
+                <!-- 消息列表将动态生成 -->
+            </div>
+        </div>
+    </div>
+
+  <script>
+	  // 状态存储对象
+	  let recordings = {};
+	  let timers = {};
+	  let timerSeconds = {};
+      // 全局变量
+const studentUserId = 'student_1'; // 学生用户ID，应与家长端一致
+let messages = [];
+
+// 页面加载时获取消息
+document.addEventListener('DOMContentLoaded', function() {
+    // 绑定消息按钮点击事件
+    document.getElementById('messageBtn').addEventListener('click', fetchMessages);
+
+    // 定时刷新消息
+    setInterval(fetchMessages, 30000); // 每30秒刷新一次
+});
+
+// 获取消息列表
+function fetchMessages() {
+    fetch(`http://127.0.0.1:5000/api/tasks/${studentUserId}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('获取消息失败');
+            }
+            return response.json();
+        })
+        .then(data => {
+            messages = data.tasks || [];
+            renderMessages();
+            updateMessageBadge();
+            document.getElementById('messageModal').style.display = 'flex';
+        })
+        .catch(error => {
+            console.error('获取消息失败:', error);
+        });
+}
+
+// 渲染消息列表
+function renderMessages() {
+    const messageListElement = document.getElementById('messageList');
+    messageListElement.innerHTML = '';
+
+    if (messages.length === 0) {
+        messageListElement.innerHTML = '<p style="text-align: center; padding: 1rem;">暂无消息</p>';
+        return;
+    }
+
+    // 按时间倒序排列
+    messages.sort((a, b) => new Date(b.send_time) - new Date(a.send_time))
+           .forEach(task => {
+        const messageElement = document.createElement('div');
+        messageElement.className = `message-item ${task.completed ? 'completed' : ''}`;
+        messageElement.style.padding = '10px';
+        messageElement.style.marginBottom = '10px';
+        messageElement.style.borderRadius = '8px';
+        messageElement.style.background = task.completed ? 'rgba(58, 95, 11, 0.1)' : 'rgba(255, 255, 255, 0.8)';
+        messageElement.style.borderLeft = task.completed ? '4px solid var(--bamboo-green)' : '4px solid var(--mercedes-blue)';
+
+        const taskTypeLabel = task.type === 'reminder' ? '督促消息' : '布置任务';
+        const completeBtn = task.completed ?
+            '<span style="color: var(--bamboo-green);"><i class="fas fa-check-circle"></i> 已完成</span>' :
+            `<button class="btn btn-outline" onclick="studentCompleteTask(${task.id})">标记完成</button>`;
+
+        messageElement.innerHTML = `
+            <div style="font-weight: bold; margin-bottom: 5px;">${taskTypeLabel}</div>
+            <div style="margin-bottom: 5px;">${task.content}</div>
+            <div style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">
+                发送时间: ${new Date(task.send_time).toLocaleString()}
+                ${task.due_date ? `<br>截止时间: ${new Date(task.due_date).toLocaleString()}` : ''}
+            </div>
+            <div style="text-align: right;">
+                ${completeBtn}
+            </div>
+        `;
+
+        messageListElement.appendChild(messageElement);
+    });
+}
+
+// 更新消息徽章
+function updateMessageBadge() {
+    const unreadCount = messages.filter(task => !task.completed).length;
+    const badge = document.getElementById('messageBadge');
+    if (unreadCount > 0) {
+        badge.textContent = unreadCount;
+        badge.style.display = 'flex';
+    } else {
+        badge.style.display = 'none';
+    }
+}
+
+// 学生标记任务完成
+function studentCompleteTask(taskId) {
+    fetch('http://127.0.0.1:5000/api/tasks/complete', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            user_id: studentUserId,
+            task_id: taskId
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('标记完成失败');
+        }
+        return response.json();
+    })
+    .then(data => {
+        fetchMessages(); // 刷新消息列表
+        alert('已标记为完成');
+    })
+    .catch(error => {
+        console.error('标记完成失败:', error);
+        alert('操作失败');
+    });
+}
+
+
+
+
+	  // 浮动墨点动画
+	  document.querySelectorAll('.floating-ink').forEach(el => {
+	      el.style.animationDelay = `${Math.random() * 2}s`;
+	      el.style.fontSize = `${40 + Math.random() * 20}px`;
+	  });
+
+	  // 初始化加载进度条
+	  let progress = 0;
+	  const updateProgress = () => {
+	      progress += Math.random() * 5 + 1;
+	      if (progress >= 100) progress = 100;
+	      document.getElementById('loading-bar').style.width = `${progress}%`;
+	      if (progress < 100) {
+	          requestAnimationFrame(updateProgress);
+	      }
+	  };
+	  updateProgress();
+
+	  // 人格切换功能
+	  document.getElementById('personalityDropdown').addEventListener('click', (e) => {
+	      if (e.target.classList.contains('personality-item')) {
+	          const personality = e.target.dataset.personality;
+	          showMessageBox(`已切换人格至 ${personality}`);
+	          togglePersonalityDropdown();
+	      }
+	  });
+
+	  // 消息提示框
+	  function showMessageBox(message) {
+	      const messageBox = document.getElementById('message-box');
+	      const content = document.getElementById('message-content');
+	      content.textContent = message;
+	      messageBox.style.display = 'block';
+	      setTimeout(() => {
+	          messageBox.style.display = 'none';
+	      }, 2000);
+	  }
+
+	  // 选择诗歌
+	  function selectPoetry(poetryTitle) {
+	      const contentElement = document.getElementById(`content-${poetryTitle}`);
+	      contentElement.style.display = 'none';
+	      document.getElementById(`recite-buttons-${poetryTitle}`).style.display = 'flex';
+	      document.getElementById(`timer-${poetryTitle}`).style.display = 'block';
+	  }
+
+	  // 开始/暂停背诵
+	  function startOrPauseRecite(poetryTitle, event) {
+	      event.stopPropagation();
+	      const startPauseButton = document.getElementById(`start-pause-${poetryTitle}`);
+
+	      if (startPauseButton.textContent === '开始') {
+	          startPauseButton.textContent = '暂停';
+	          startRecording(poetryTitle);
+	          timers[poetryTitle] = startTimer(poetryTitle);
+	      } else {
+	          startPauseButton.textContent = '开始';
+	          pauseRecording(poetryTitle);
+	          pauseTimer(poetryTitle);
+	      }
+	  }
+
+	  // 开始录音
+	  async function startRecording(poetryTitle) {
+    try {
+        // 先调用后端启动语音识别
+        const startResp = await fetch('http://127.0.0.1:5000/start');
+        if (!startResp.ok) throw new Error('无法启动语音识别');
+
+        // 然后开始本地录音（可选）
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const recorder = new MediaRecorder(stream);
+        // ...其余录音逻辑
+    } catch (err) {
+        console.error('启动失败:', err);
+        showMessageBox('启动语音识别失败');
+    }
+}
+	  // 暂停录音
+	  function pauseRecording(poetryTitle) {
+	      if (recordings[poetryTitle]) {
+	          const { recorder, stream } = recordings[poetryTitle];
+	          recorder.stop();
+	          stream.getTracks().forEach(track => track.stop());
+	          showMessageBox('录音已暂停');
+	      }
+	  }
+
+	  // 启动计时器
+	  function startTimer(poetryTitle) {
+	      timerSeconds[poetryTitle] = 0;
+	      const timeSpan = document.getElementById(`time-${poetryTitle}`);
+	      return setInterval(() => {
+	          timerSeconds[poetryTitle]++;
+	          const minutes = Math.floor(timerSeconds[poetryTitle] / 60);
+	          const seconds = timerSeconds[poetryTitle] % 60;
+	          timeSpan.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+	      }, 1000);
+	  }
+
+	  // 暂停计时器
+	  function pauseTimer(poetryTitle) {
+	      if (timers[poetryTitle]) {
+	          clearInterval(timers[poetryTitle]);
+	          delete timers[poetryTitle];
+	      }
+	  }
+
+	  // 放弃背诵
+	  function giveUpRecite(poetryTitle, event) {
+	      event.stopPropagation();
+	      pauseRecording(poetryTitle);
+	      pauseTimer(poetryTitle);
+	      resetUIState(poetryTitle);
+	      showMessageBox('已放弃背诵');
+	  }
+
+	  // 结束背诵
+	async function endRecite(poetryTitle, event) {
+    event.stopPropagation();
+
+    try {
+        // 1. 先调用后端停止语音识别
+        const stopResponse = await fetch('http://127.0.0.1:5000/stop');
+        if (!stopResponse.ok) throw new Error('停止语音识别失败');
+
+        const { 结果: recognizedText } = await stopResponse.json();
+
+        // 2. 在聊天框中显示用户语音识别内容
+        if (recognizedText && recognizedText.trim()) {
+            // 创建用户消息气泡
+            const userBubble = document.createElement('div');
+            userBubble.className = 'user-bubble';
+            userBubble.innerHTML = `
+                <div style="color: var(--vermilion); margin-bottom: 5px;">
+                    <i class="fas fa-microphone"></i> 我的背诵
+                </div>
+                ${recognizedText}
+            `;
+            document.getElementById('chat-container').appendChild(userBubble);
+
+            // 3. 调用AI评价接口
+            const aiResponse = await fetch('http://127.0.0.1:5000/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ message: recognizedText })
+            });
+
+            if (aiResponse.ok) {
+                const aiReply = await aiResponse.text();
+
+                // 创建AI回复气泡
+                const botBubble = document.createElement('div');
+                botBubble.className = 'bot-bubble';
+                botBubble.innerHTML = `
+                    <div style="color: var(--mercedes-blue); margin-bottom: 5px;">
+                        <i class="fas fa-robot"></i> 背诵评价
+                    </div>
+                    ${aiReply}
+                `;
+                document.getElementById('chat-container').appendChild(botBubble);
+
+                // 自动滚动到最新消息
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+        }
+    } catch (error) {
+        console.error('背诵评价失败:', error);
+        showMessageBox('获取评价失败，请重试');
+    } finally {
+        // 重置UI状态
+        resetUIState(poetryTitle);
+    }
+}
+
+	  // 返回选择
+	  function returnToSelect(poetryTitle, event) {
+	      event.stopPropagation();
+	      pauseRecording(poetryTitle);
+	      pauseTimer(poetryTitle);
+	      resetUIState(poetryTitle);
+	      showMessageBox('已返回选择');
+	  }
+
+	  // 重置界面状态
+	  function resetUIState(poetryTitle) {
+	      const contentElement = document.getElementById(`content-${poetryTitle}`);
+	      contentElement.style.display = 'block';
+	      document.getElementById(`recite-buttons-${poetryTitle}`).style.display = 'none';
+	      document.getElementById(`timer-${poetryTitle}`).style.display = 'none';
+	      document.getElementById(`start-pause-${poetryTitle}`).textContent = '开始';
+	      document.getElementById(`time-${poetryTitle}`).textContent = '0:00';
+	      delete timerSeconds[poetryTitle];
+	  }
+
+	  // 主题切换
+	  function toggleTheme() {
+	      const html = document.documentElement;
+	      const themeIcon = document.getElementById('theme-icon');
+	      if (html.dataset.theme === 'light') {
+	          html.dataset.theme = 'dark';
+	          themeIcon.classList.replace('fa-moon', 'fa-sun');
+	      } else {
+	          html.dataset.theme = 'light';
+	          themeIcon.classList.replace('fa-sun', 'fa-moon');
+	      }
+	  }
+
+	  // 字体调整
+	  function increaseFontSize() {
+	      document.documentElement.style.fontSize =
+	          `${parseFloat(getComputedStyle(document.documentElement).fontSize) + 1}px`;
+	  }
+
+	  function decreaseFontSize() {
+	      const currentSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+	      if (currentSize > 10) {
+	          document.documentElement.style.fontSize = `${currentSize - 1}px`;
+	      }
+	  }
+
+	  // 人格切换下拉菜单
+	  function togglePersonalityDropdown() {
+	      document.getElementById('personalityDropdown').classList.toggle('active');
+	  }
+
+	  // 发送消息
+	  async function sendMessage() {
+	      const input = document.getElementById('chat-input');
+	      const message = input.value.trim();
+	      if (!message) return;
+
+	      const userBubble = document.createElement('div');
+	      userBubble.className = 'user-bubble';
+	      userBubble.textContent = message;
+	      document.getElementById('chat-container').appendChild(userBubble);
+	      input.value = '';
+
+	      try {
+	          // 向后端 /api/chat 接口发送用户输入的文字消息
+	          // 此接口应接收文字消息，并返回聊天回复
+	          const response = await fetch('http://127.0.0.1:5000/api/chat', {
+	              method: 'POST',
+	              headers: {
+	                  'Content-Type': 'application/x-www-form-urlencoded'
+	              },
+	              body: new URLSearchParams({ message })
+	          });
+
+	          if (response.ok) {
+	              const reply = await response.text();
+	              if (reply.trim()) {
+	                  const botBubble = document.createElement('div');
+	                  botBubble.className = 'bot-bubble';
+	                  botBubble.textContent = reply;
+	                  document.getElementById('chat-container').appendChild(botBubble);
+	              }
+	          }
+	      } catch (error) {
+	          console.error('获取聊天回复失败:', error);
+	      }
+	  }
+  </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+</body>
+
+</html>

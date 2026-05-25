@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>慧背-家长端</title>
+  <!-- 引入外部资源 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+
+  <!-- Tailwind 配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#4361ee',
+            secondary: '#3f37c9',
+            accent: '#4895ef',
+            success: '#4cc9f0',
+            warning: '#f72585',
+            neutral: '#f8f9fa',
+            'neutral-dark': '#343a40'
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            serif: ['"Noto Serif SC"', 'serif']
+          },
+        },
+      }
+    }
+  </script>
+
+  <!-- 自定义工具类 -->
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .card-shadow {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+      }
+      .hover-lift {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+      .hover-lift:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      }
+      .gradient-bg {
+        background: linear-gradient(135deg, #4361ee 0%, #3f37c9 100%);
+      }
+      .badge-dot {
+        position: relative;
+      }
+      .badge-dot::after {
+        content: '';
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: #4361ee;
+        border: 2px solid white;
+      }
+      .toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        color: white;
+        font-size: 14px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 9999;
+        opacity: 0;
+        transform: translateY(-20px);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+      }
+      .toast.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .toast.success {
+        background-color: #22c55e;
+      }
+      .toast.warning {
+        background-color: #f59e0b;
+      }
+      .toast.error {
+        background-color: #ef4444;
+      }
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 50;
+        display: none;
+      }
+      .modal {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.95);
+        background-color: white;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 500px;
+        max-height: 80vh;
+        overflow-y: auto;
+        z-index: 60;
+        display: none;
+        transition: transform 0.3s ease;
+      }
+      .modal.show {
+        display: block;
+        transform: translate(-50%, -50%) scale(1);
+      }
+      .modal-backdrop.show {
+        display: block;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 font-sans text-neutral-dark">
+  <!-- 顶部导航栏 -->
+  <header class="gradient-bg text-white shadow-lg sticky top-0 z-50 transition-all duration-300">
+    <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <i class="fa fa-book text-2xl" aria-hidden="true"></i>
+        <h1 class="text-xl md:text-2xl font-bold">慧背<span class="hidden md:inline">·家长端</span></h1>
+      </div>
+
+      <div class="flex items-center space-x-4">
+        <div class="hidden md:flex items-center space-x-2">
+          <img src="https://picsum.photos/id/64/40/40" alt="用户头像" class="w-10 h-10 rounded-full border-2 border-white/50">
+          <span id="parentName">张明家长</span> <!-- 家长姓名：支持修改后同步 -->
+        </div>
+        <button class="md:hidden text-white text-xl" id="mobileMenuBtn">
+          <i class="fa fa-bars" aria-hidden="true"></i>
+        </button>
+      </div>
+        <!-- 在页面顶部或合适位置添加返回按钮 -->
+        <div style="position: fixed; top: 2rem; left: 2rem; z-index: 999;">
+            <button class="back-button" onclick="window.location.href='index.html'" style="display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-arrow-left"></i> 返回
+            </button>
+        </div>
+
+    </div>
+    <!-- 移动端菜单 -->
+    <div id="mobileMenu" class="md:hidden bg-white text-neutral-dark hidden">
+      <div class="px-4 py-3 border-b">
+        <div class="flex items-center space-x-3">
+          <img src="https://picsum.photos/id/64/40/40" alt="用户头像" class="w-10 h-10 rounded-full">
+          <div>
+            <p class="font-medium" id="mobileParentName">张明家长</p> <!-- 移动端家长姓名 -->
+            <p class="text-xs text-gray-500">查看个人中心</p>
+          </div>
+        </div>
+      </div>
+      <div class="py-2">
+        <a href="#" class="block px-4 py-3 hover:bg-gray-50 flex items-center">
+          <i class="fa fa-user mr-3 text-primary"></i> 个人信息
+        </a>
+        <a href="#" class="block px-4 py-3 hover:bg-gray-50 flex items-center">
+          <i class="fa fa-bell mr-3 text-primary"></i> 消息通知
+        </a>
+        <a href="#" class="block px-4 py-3 hover:bg-gray-50 flex items-center">
+          <i class="fa fa-question-circle mr-3 text-primary"></i> 帮助中心
+        </a>
+        <a href="#" class="block px-4 py-3 hover:bg-gray-50 flex items-center">
+          <i class="fa fa-sign-out mr-3 text-primary"></i> 退出登录
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主内容区 -->
+  <main class="container mx-auto px-4 py-6">
+    <!-- 学生信息卡片 -->
+    <section class="mb-8">
+      <div class="bg-white rounded-xl p-6 card-shadow hover-lift">
+        <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
+          <img src="https://picsum.photos/id/237/100/100" alt="学生照片" class="w-24 h-24 rounded-full object-cover border-4 border-primary/20">
+
+          <div class="flex-1 text-center md:text-left">
+            <h2 class="text-2xl font-bold text-primary mb-2" id="studentName">张明</h2> <!-- 学生姓名：支持修改后同步 -->
+            <div class="flex flex-wrap justify-center md:justify-start gap-4 text-sm text-gray-600 mb-4">
+              <span id="studentClass"><i class="fa fa-graduation-cap mr-1 text-accent"></i> 三年级（2）班</span> <!-- 班级：支持修改后同步 -->
+              <span id="studentBirth"><i class="fa fa-calendar mr-1 text-accent"></i> 2015年9月出生</span> <!-- 出生日期：支持修改后同步 -->
+              <span id="reciteStats"><i class="fa fa-trophy mr-1 text-accent"></i> 已背诵：28首（共背诵56次）</span>
+            </div>
+
+            <div class="flex justify-center md:justify-start gap-3">
+              <button class="bg-primary hover:bg-secondary text-white px-4 py-2 rounded-lg transition-colors duration-300 flex items-center gap-2" id="refreshBtn">
+                <i class="fa fa-refresh"></i>
+                <span>刷新数据</span>
+              </button>
+              <button class="bg-white border border-primary text-primary hover:bg-primary/5 px-4 py-2 rounded-lg transition-colors duration-300 flex items-center gap-2" id="settingsBtn">
+                <i class="fa fa-cog"></i>
+                <span>设置</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- 背诵记录列表（支持后端数据接入） -->
+    <section>
+      <div class="flex justify-between items-center mb-4 flex-col md:flex-row gap-3">
+        <h2 class="text-xl font-bold">古诗背诵记录</h2>
+        <div class="relative w-full md:w-auto">
+          <input type="text" placeholder="搜索古诗名称..." class="w-full md:w-64 pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all duration-300" id="searchInput">
+          <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl overflow-hidden card-shadow">
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="bg-gray-50 text-left">
+                <th class="px-6 py-4 font-semibold text-gray-600 text-sm">古诗名称</th>
+                <th class="px-6 py-4 font-semibold text-gray-600 text-sm">作者</th>
+                <th class="px-6 py-4 font-semibold text-gray-600 text-sm">背诵次数</th>
+                <th class="px-6 py-4 font-semibold text-gray-600 text-sm">最近背诵</th>
+                <th class="px-6 py-4 font-semibold text-gray-600 text-sm">最高评分</th>
+                <th class="px-6 py-4 font-semibold text-gray-600 text-sm">状态</th>
+                <th class="px-6 py-4 font-semibold text-gray-600 text-sm">操作</th>
+              </tr>
+            </thead>
+            <tbody id="reciteTableBody">
+              <!-- 表格数据将通过后端接口动态渲染 -->
+              <tr class="border-t border-gray-100">
+                <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                  <i class="fa fa-spinner fa-spin mr-2"></i> 加载中...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 分页 -->
+        <div class="px-6 py-4 border-t border-gray-100 flex justify-between items-center flex-col md:flex-row gap-4">
+          <div class="text-sm text-gray-500">显示 <span id="currentRange">0-0</span> 条，共 <span id="totalPoems">0</span> 首古诗（<span id="totalRecites">0</span>次背诵）</div>
+          <div class="flex space-x-1" id="pagination">
+            <button class="w-9 h-9 flex items-center justify-center rounded border border-gray-200 text-gray-500 hover:border-primary hover:text-primary transition-colors duration-200 pagination-btn" data-page="prev" disabled>
+              <i class="fa fa-angle-left" aria-hidden="true"></i>
+            </button>
+            <button class="w-9 h-9 flex items-center justify-center rounded bg-primary text-white pagination-btn" data-page="1">1</button>
+            <button class="w-9 h-9 flex items-center justify-center rounded border border-gray-200 hover:border-primary hover:text-primary transition-colors duration-200 pagination-btn" data-page="2">2</button>
+            <button class="w-9 h-9 flex items-center justify-center rounded border border-gray-200 hover:border-primary hover:text-primary transition-colors duration-200 pagination-btn" data-page="3">3</button>
+            <button class="w-9 h-9 flex items-center justify-center rounded border border-gray-200 hover:border-primary hover:text-primary transition-colors duration-200 pagination-btn" data-page="4">4</button>
+            <button class="w-9 h-9 flex items-center justify-center rounded border border-gray-200 hover:border-primary hover:text-primary transition-colors duration-200 pagination-btn" data-page="5">5</button>
+            <button class="w-9 h-9 flex items-center justify-center rounded border border-gray-200 text-gray-500 hover:border-primary hover:text-primary transition-colors duration-200 pagination-btn" data-page="next">
+              <i class="fa fa-angle-right" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 背诵历史详情弹窗 -->
+  <div id="reciteHistoryModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden">
+    <div class="bg-white rounded-xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+      <!-- 弹窗头部 -->
+      <div class="gradient-bg text-white p-4 flex justify-between items-center">
+        <h3 class="text-xl font-bold" id="modalTitle">静夜思 - 背诵历史</h3>
+        <button onclick="closeModal()" class="text-white text-xl hover:text-gray-200 transition-colors">
+          <i class="fa fa-times" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <!-- 弹窗内容 -->
+      <div class="p-6 overflow-y-auto flex-1">
+        <div class="mb-6">
+          <h4 class="text-lg font-semibold mb-3 flex items-center">
+            <i class="fa fa-line-chart text-primary mr-2"></i> 评分变化趋势
+          </h4>
+          <div class="h-64">
+            <canvas id="historyScoreChart"></canvas>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="text-lg font-semibold mb-3 flex items-center">
+            <i class="fa fa-list-alt text-primary mr-2"></i> 详细背诵记录
+          </h4>
+          <div class="space-y-4" id="historyRecords">
+            <!-- 历史记录将通过后端接口动态填充 -->
+            <div class="text-center text-gray-500 py-4">
+              <i class="fa fa-spinner fa-spin mr-2"></i> 加载历史记录...
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 弹窗底部 -->
+      <div class="p-4 border-t border-gray-100 flex justify-end gap-3">
+        <button onclick="closeModal()" class="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors duration-200">
+          关闭
+        </button>
+        <button class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition-colors duration-200 remind-btn" id="modalRemindBtn">
+          提醒孩子再背一次
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 设置弹窗 -->
+  <div class="modal-backdrop" id="settingsBackdrop"></div>
+  <div class="modal" id="settingsModal">
+    <div class="p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold text-primary">学生设置</h3>
+        <button class="text-gray-500 hover:text-gray-700" id="closeSettingsBtn">
+          <i class="fa fa-times text-xl"></i>
+        </button>
+      </div>
+      <form id="settingsForm">
+        <div class="space-y-4">
+          <!-- 家长姓名（新增：支持修改） -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">家长姓名</label>
+            <input type="text" value="张明家长" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" id="formParentName">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">学生姓名</label>
+            <input type="text" value="张明" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" id="formStudentName">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">班级信息</label>
+            <input type="text" value="三年级（2）班" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" id="formStudentClass">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">出生日期</label>
+            <input type="date" value="2015-09-01" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" id="formStudentBirth">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">背诵提醒时间</label>
+            <input type="time" value="19:30" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" id="formRemindTime">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">提醒频率</label>
+            <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" id="formRemindFreq">
+              <option value="daily">每天</option>
+              <option value="weekday" selected>工作日</option>
+              <option value="custom">自定义</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">评分标准</label>
+            <div class="flex items-center space-x-4">
+              <label class="inline-flex items-center">
+                <input type="radio" name="scoreStandard" value="strict" class="text-primary focus:ring-primary" checked>
+                <span class="ml-2">严格</span>
+              </label>
+              <label class="inline-flex items-center">
+                <input type="radio" name="scoreStandard" value="normal" class="text-primary focus:ring-primary">
+                <span class="ml-2">中等</span>
+              </label>
+              <label class="inline-flex items-center">
+                <input type="radio" name="scoreStandard" value="relaxed" class="text-primary focus:ring-primary">
+                <span class="ml-2">宽松</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="mt-6 flex justify-end gap-3">
+          <button type="button" class="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors duration-200" id="cancelSettingsBtn">
+            取消
+          </button>
+          <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition-colors duration-200">
+            保存设置
+          </button>
+        </div>
+      </form>
+    </div>
+
+
+  </div>
+
+  <!-- 再背一次确认弹窗 -->
+  <div class="modal-backdrop" id="reciteAgainBackdrop"></div>
+  <div class="modal" id="reciteAgainModal">
+    <div class="p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold text-primary">再背一次</h3>
+        <button class="text-gray-500 hover:text-gray-700" id="closeReciteAgainBtn">
+          <i class="fa fa-times text-xl"></i>
+        </button>
+      </div>
+      <div class="mb-6">
+        <p class="text-gray-700 mb-4" id="reciteAgainText">确定要让张明再背诵一次《静夜思》吗？</p>
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h4 class="font-medium text-gray-800 mb-2">背诵建议</h4>
+          <ul class="text-sm text-gray-600 space-y-1">
+            <li><i class="fa fa-check-circle text-primary mr-1"></i> 建议在安静环境中背诵</li>
+            <li><i class="fa fa-check-circle text-primary mr-1"></i> 背诵时注意语速和停顿</li>
+            <li><i class="fa fa-check-circle text-primary mr-1"></i> 完成后可查看详细评分</li>
+          </ul>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3">
+        <button class="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors duration-200" id="cancelReciteAgainBtn">
+          取消
+        </button>
+        <button class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition-colors duration-200" id="confirmReciteAgainBtn">
+          确认
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 提醒成功弹窗 -->
+  <div class="modal-backdrop" id="remindSuccessBackdrop"></div>
+  <div class="modal" id="remindSuccessModal">
+    <div class="p-6 text-center">
+      <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="fa fa-check text-2xl text-green-500"></i>
+      </div>
+      <h3 class="text-xl font-bold text-gray-800 mb-2">提醒发送成功</h3>
+      <p class="text-gray-600 mb-6">已通过APP推送和短信提醒张明背诵《静夜思》</p>
+      <button class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition-colors duration-200" id="closeRemindSuccessBtn">
+        确定
+      </button>
+    </div>
+  </div>
+
+  <!-- 提示框 -->
+  <div class="toast" id="toast"></div>
+
+  <!-- 页脚 -->
+  <footer class="bg-white border-t border-gray-200 mt-12 py-6">
+    <div class="container mx-auto px-4">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div class="mb-4 md:mb-0">
+          <div class="flex items-center space-x-2 text-primary">
+            <i class="fa fa-book text-xl" aria-hidden="true"></i>
+            <span class="font-bold text-lg">古诗背诵</span>
+          </div>
+          <p class="text-sm text-gray-500 mt-1">让孩子爱上古诗，传承中华文化</p>
+        </div>
+
+        <div class="flex space-x-6">
+          <a href="#" class="text-gray-500 hover:text-primary transition-colors duration-200">
+            <i class="fa fa-question-circle mr-1"></i>帮助中心
+          </a>
+          <a href="#" class="text-gray-500 hover:text-primary transition-colors duration-200">
+            <i class="fa fa-phone mr-1"></i>联系我们
+          </a>
+          <a href="#" class="text-gray-500 hover:text-primary transition-colors duration-200">
+            <i class="fa fa-shield mr-1"></i>隐私政策
+          </a>
+        </div>
+      </div>
+
+      <div class="mt-6 pt-6 border-t border-gray-100 text-center text-sm text-gray-500">
+        © 古诗背诵教育平台
+      </div>
+    </div>
+  </footer>
+
+  <!-- JavaScript 代码 -->
+  <script>
+    // 全局变量
+    let currentPage = 1;
+    const pageSize = 5;
+    let totalPoems = 0;
+    let totalPages = 0;
+    let currentPoem = '';
+    let allPoems = []; // 存储后端返回的所有古诗数据
+    let reciteHistoryData = {}; // 存储后端返回的背诵历史数据
+
+    // 页面加载完成后初始化
+    document.addEventListener('DOMContentLoaded', function() {
+      // 1. 优先从后端加载数据（核心修改：支持后端数据接入）
+      fetchBackendData();
+
+      // 2. 导航栏滚动效果
+      window.addEventListener('scroll', function() {
+        const header = document.querySelector('header');
+        if (window.scrollY > 10) {
+          header.classList.add('py-2');
+          header.classList.remove('py-3');
+        } else {
+          header.classList.add('py-3');
+          header.classList.remove('py-2');
+        }
+      });
+
+      // 3. 移动端菜单切换
+      document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+        const mobileMenu = document.getElementById('mobileMenu');
+        mobileMenu.classList.toggle('hidden');
+      });
+
+      // 4. 搜索功能
+      const searchInput = document.getElementById('searchInput');
+      searchInput.addEventListener('input', function(e) {
+        const searchTerm = e.target.value.trim().toLowerCase();
+        filterPoems(searchTerm);
+      });
+
+      // 5. 分页按钮事件
+      document.querySelectorAll('.pagination-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const page = this.getAttribute('data-page');
+          handlePagination(page);
+        });
+      });
+
+      // 6. 刷新数据按钮（重新请求后端数据）
+      document.getElementById('refreshBtn').addEventListener('click', function() {
+        showToast('正在刷新数据...', 'warning');
+        fetchBackendData(true); // 强制刷新
+      });
+
+      // 7. 设置按钮
+      document.getElementById('settingsBtn').addEventListener('click', function() {
+        // 打开设置弹窗时，同步当前信息到表单（核心修改：表单数据回显）
+        document.getElementById('formParentName').value = document.getElementById('parentName').textContent;
+        document.getElementById('formStudentName').value = document.getElementById('studentName').textContent;
+        document.getElementById('formStudentClass').value = document.getElementById('studentClass').textContent.replace('📚 ', '');
+        // 出生日期格式转换（页面显示：2015年9月出生 → 表单：2015-09-01）
+        const birthText = document.getElementById('studentBirth').textContent.match(/(\d{4})年(\d{1,2})月/);
+        if (birthText) {
+          const year = birthText[1];
+          const month = String(birthText[2]).padStart(2, '0');
+          document.getElementById('formStudentBirth').value = `${year}-${month}-01`;
+        }
+        document.getElementById('settingsBackdrop').classList.add('show');
+        document.getElementById('settingsModal').classList.add('show');
+      });
+
+      // 8. 关闭设置弹窗
+      document.getElementById('closeSettingsBtn').addEventListener('click', closeSettingsModal);
+      document.getElementById('cancelSettingsBtn').addEventListener('click', closeSettingsModal);
+      document.getElementById('settingsBackdrop').addEventListener('click', closeSettingsModal);
+
+      // 9. 保存设置（核心修改：同步表单修改到页面）
+      document.getElementById('settingsForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // 获取表单数据
+        const parentName = document.getElementById('formParentName').value.trim();
+        const studentName = document.getElementById('formStudentName').value.trim();
+        const studentClass = document.getElementById('formStudentClass').value.trim();
+        const studentBirth = document.getElementById('formStudentBirth').value;
+        const remindTime = document.getElementById('formRemindTime').value;
+        const remindFreq = document.getElementById('formRemindFreq').value;
+        const scoreStandard = document.querySelector('input[name="scoreStandard"]:checked').value;
+
+        // 验证必填项
+        if (!parentName || !studentName || !studentClass || !studentBirth) {
+          showToast('请填写完整必填信息！', 'error');
+          return;
+        }
+
+        // 同步到页面显示（核心修改：实时更新页面信息）
+        document.getElementById('parentName').textContent = parentName;
+        document.getElementById('mobileParentName').textContent = parentName;
+        document.getElementById('studentName').textContent = studentName;
+        document.getElementById('studentClass').innerHTML = `<i class="fa fa-graduation-cap mr-1 text-accent"></i> ${studentClass}`;
+        // 出生日期格式转换（表单：2015-09-01 → 页面显示：2015年9月出生）
+        const birthDate = new Date(studentBirth);
+        document.getElementById('studentBirth').innerHTML = `<i class="fa fa-calendar mr-1 text-accent"></i> ${birthDate.getFullYear()}年${birthDate.getMonth() + 1}月出生`;
+
+        // （可选）调用后端接口保存设置
+        saveSettingsToBackend({
+          parentName,
+          studentName,
+          studentClass,
+          studentBirth,
+          remindTime,
+          remindFreq,
+          scoreStandard
+        });
+
+        showToast('设置保存成功！', 'success');
+        closeSettingsModal();
+      });
+
+      // 10. 历史按钮事件
+      document.addEventListener('click', function(e) {
+        if (e.target.closest('.history-btn')) {
+          const btn = e.target.closest('.history-btn');
+          const poemName = btn.getAttribute('data-poem');
+          showReciteHistory(poemName);
+        }
+      });
+
+      // 11. 再背一次按钮事件
+      document.addEventListener('click', function(e) {
+        if (e.target.closest('.recite-again-btn')) {
+          const btn = e.target.closest('.recite-again-btn');
+          currentPoem = btn.getAttribute('data-poem');
+          const studentName = document.getElementById('studentName').textContent;
+          document.getElementById('reciteAgainText').textContent = `确定要让${studentName}再背诵一次《${currentPoem}》吗？`;
+          document.getElementById('reciteAgainBackdrop').classList.add('show');
+          document.getElementById('reciteAgainModal').classList.add('show');
+        }
+      });
+
+      // 12. 关闭再背一次弹窗
+      document.getElementById('closeReciteAgainBtn').addEventListener('click', closeReciteAgainModal);
+      document.getElementById('cancelReciteAgainBtn').addEventListener('click', closeReciteAgainModal);
+      document.getElementById('reciteAgainBackdrop').addEventListener('click', closeReciteAgainModal);
+
+      // 13. 确认再背一次（同步后端数据）
+      document.getElementById('confirmReciteAgainBtn').addEventListener('click', function() {
+        closeReciteAgainModal();
+        const studentName = document.getElementById('studentName').textContent;
+        showToast(`已提醒${studentName}背诵《${currentPoem}》`, 'success');
+
+        // 模拟调用后端接口，添加一次背诵记录
+        addReciteRecordToBackend(currentPoem)
+          .then(newRecord => {
+            // 后端返回新记录后，更新本地数据并刷新页面
+            updateLocalDataWithNewRecord(currentPoem, newRecord);
+            renderPage(currentPage); // 重新渲染当前页
+            showToast(`《${currentPoem}》背诵记录已更新！`, 'success');
+          })
+          .catch(err => {
+            showToast('背诵记录更新失败，请重试！', 'error');
+            console.error(err);
+          });
+      });
+
+      // 14. 弹窗提醒按钮
+      document.getElementById('modalRemindBtn').addEventListener('click', function() {
+        closeModal();
+        document.getElementById('remindSuccessBackdrop').classList.add('show');
+        document.getElementById('remindSuccessModal').classList.add('show');
+      });
+
+      // 15. 关闭提醒成功弹窗
+      document.getElementById('closeRemindSuccessBtn').addEventListener('click', function() {
+        document.getElementById('remindSuccessBackdrop').classList.remove('show');
+        document.getElementById('remindSuccessModal').classList.remove('show');
+      });
+    });
+
+    // -------------------------- 核心修改：后端数据交互相关函数 --------------------------
+    /**
+     * 1. 从后端加载所有数据（古诗列表 + 背诵历史）
+     * @param {boolean} forceRefresh - 是否强制刷新（忽略缓存）
+     */
+    async function fetchBackendData(forceRefresh = false) {//获取后端数据
+      try {
+        const response = await fetch('static/data/data.json', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',//声明请求数据格式为JSON
+            // 可添加认证信息（如Token）
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          },
+          cache: forceRefresh ? 'no-cache' : 'default'//强制刷新时禁用缓存，负责使用默认缓存
+        });
+
+        if (!response.ok) throw new Error('数据加载失败');
+        const res = await response.json();
+
+        // 更新全局数据（核心：使用后端返回的数据覆盖本地模拟数据）
+        allPoems = res.poems || [];
+        reciteHistoryData = res.reciteHistory || {};
+
+        // 计算总数
+        totalPoems = allPoems.length;
+        totalPages = Math.ceil(totalPoems / pageSize);
+        const totalRecites = allPoems.reduce((total, poem) => total + poem.times, 0);
+
+        // 更新页面统计信息
+        document.getElementById('totalPoems').textContent = totalPoems;
+        document.getElementById('totalRecites').textContent = totalRecites;
+        document.getElementById('reciteStats').innerHTML = `<i class="fa fa-trophy mr-1 text-accent"></i> 已背诵：${totalPoems}首（共背诵${totalRecites}次）`;
+
+        // 渲染页面
+        renderPage(currentPage);
+        renderPaginationButtons();
+        updateCurrentRange();
+
+      } catch (err) {
+        console.error('后端数据加载失败：', err);
+        document.getElementById('reciteTableBody').innerHTML = `
+          <tr class="border-t border-gray-100">
+            <td colspan="7" class="px-6 py-8 text-center text-red-500">
+              <i class="fa fa-exclamation-circle mr-2"></i> 数据加载失败，请刷新重试
+            </td>
+          </tr>
+        `;
+      }
+    }
+
+
+
+    /**
+     * 3. 新增背诵记录到后端
+     * @param {string} poemName - 古诗名称
+     * @returns {Promise<Object>} 新的背诵记录
+     */
+    async function addReciteRecordToBackend(poemName) {
+
+      const response = await fetch('/api/student/recite', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
+        },
+        body: JSON.stringify({
+          poemName: poemName,
+          studentId: localStorage.getItem('studentId') // 假设本地存储了学生ID
+        })
+      });
+
+      if (!response.ok) throw new Error('背诵记录添加失败');
+      const res = await response.json();
+      // 后端返回新记录格式示例：
+      // { "times": 4, "date": "2025-11-07", "score": 92, "status": "已掌握", "comment": "表现优秀" }
+      return res.newRecord;
+    }
+
+    /**
+     * 4. 用新背诵记录更新本地数据
+     * @param {string} poemName - 古诗名称
+     * @param {Object} newRecord - 新背诵记录
+     */
+    function updateLocalDataWithNewRecord(poemName, newRecord) {
+      // 更新古诗列表中的数据
+      const poemIndex = allPoems.findIndex(p => p.name === poemName);//遍历数组中寻找与给定名称匹配的元素
+      if (poemIndex !== -1) {
+        allPoems[poemIndex].times = newRecord.times;
+        allPoems[poemIndex].lastDate = newRecord.date;
+        allPoems[poemIndex].score = newRecord.score;
+        allPoems[poemIndex].status = newRecord.status;
+
+        // 更新状态样式
+        if (newRecord.status === '已掌握') {
+          allPoems[poemIndex].statusClass = 'bg-green-100 text-green-800';
+          allPoems[poemIndex].icon = 'fa-check-circle';
+        } else if (newRecord.status === '已完成') {
+          allPoems[poemIndex].statusClass = 'bg-blue-100 text-blue-800';
+          allPoems[poemIndex].icon = 'fa-check';
+        } else if (newRecord.status === '需复习') {
+          allPoems[poemIndex].statusClass = 'bg-yellow-100 text-yellow-800';
+          allPoems[poemIndex].icon = 'fa-exclamation-circle';
+        } else {
+          allPoems[poemIndex].statusClass = 'bg-red-100 text-red-800';
+          allPoems[poemIndex].icon = 'fa-times-circle';
+        }
+      }
+
+      // 更新背诵历史数据
+      if (!reciteHistoryData[poemName]) {
+        reciteHistoryData[poemName] = [];
+      }
+      reciteHistoryData[poemName].push(newRecord);//在数组末尾添加一个新元素
+
+      // 更新总背诵次数
+      const totalRecites = allPoems.reduce((total, poem) => total + poem.times, 0);
+      document.getElementById('totalRecites').textContent = totalRecites;
+      document.getElementById('reciteStats').innerHTML = `<i class="fa fa-trophy mr-1 text-accent"></i> 已背诵：${totalPoems}首（共背诵${totalRecites}次）`;
+    }
+
+    // -------------------------- 原有功能函数（保持不变，适配后端数据） --------------------------
+    // 过滤古诗（搜索功能）
+    function filterPoems(searchTerm) {
+      let filteredPoems = allPoems;
+
+      if (searchTerm) {
+        filteredPoems = allPoems.filter(poem =>
+          poem.name.toLowerCase().includes(searchTerm) ||
+          poem.author.toLowerCase().includes(searchTerm) ||
+          poem.type.toLowerCase().includes(searchTerm)
+        );
+      }
+
+      // 更新总数和分页
+      totalPoems = filteredPoems.length;
+      totalPages = Math.ceil(totalPoems / pageSize);
+      currentPage = 1;//重置当前页为1
+
+      document.getElementById('totalPoems').textContent = totalPoems;
+      document.getElementById('totalRecites').textContent = filteredPoems.reduce((total, poem) => total + poem.times, 0);
+
+      // 重新渲染分页按钮
+      renderPaginationButtons();
+      // 重新渲染表格
+      renderTable(filteredPoems.slice(0, pageSize));
+      // 更新当前范围显示
+      updateCurrentRange();
+    }
+
+    // 处理分页
+    function handlePagination(page) {
+      if (page === 'prev') {
+        if (currentPage > 1) {
+          currentPage--;
+        }
+      } else if (page === 'next') {
+        if (currentPage < totalPages) {
+          currentPage++;
+        }
+      } else {
+        currentPage = parseInt(page);
+      }
+
+      // 重新渲染
+      renderPage(currentPage);
+    }
+
+    // 渲染指定页码
+    function renderPage(page) {
+      const startIndex = (page - 1) * pageSize;
+      const endIndex = Math.min(startIndex + pageSize, totalPoems);
+
+      // 获取当前页的数据
+      let currentPoems = allPoems.slice(startIndex, endIndex);
+
+      // 如果有搜索词，使用过滤后的数据
+      const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
+      if (searchTerm) {
+        const filteredPoems = allPoems.filter(poem =>
+          poem.name.toLowerCase().includes(searchTerm) ||
+          poem.author.toLowerCase().includes(searchTerm) ||
+          poem.type.toLowerCase().includes(searchTerm)
+        );
+        currentPoems = filteredPoems.slice(startIndex, endIndex);
+      }
+
+      // 渲染表格
+      renderTable(currentPoems);
+      // 渲染分页按钮
+      renderPaginationButtons();
+      // 更新当前范围显示
+      updateCurrentRange();
+    }
+
+    // 渲染表格（适配后端数据格式）
+    function renderTable(poems) {
+      const tableBody = document.getElementById('reciteTableBody');
+      tableBody.innerHTML = '';
+
+      if (poems.length === 0) {
+        tableBody.innerHTML = `
+          <tr class="border-t border-gray-100">
+            <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+              <i class="fa fa-search mr-2"></i> 暂无匹配数据
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      poems.forEach(poem => {
+        // 决定是否显示badge-dot（多次背诵）
+        const badgeDotClass = poem.times > 1 ? 'badge-dot' : '';
+        // 决定次数显示的样式
+        const timesClass = poem.times > 1 ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-600';
+        // 决定评分显示的样式
+        let scoreClass = 'bg-yellow-100 text-yellow-800';
+        if (poem.score >= 90) scoreClass = 'bg-green-100 text-green-800';
+        else if (poem.score < 80) scoreClass = 'bg-yellow-100 text-yellow-800';
+
+        const row = document.createElement('tr');
+        row.className = 'border-t border-gray-100 hover:bg-gray-50 transition-colors duration-200';
+        row.setAttribute('data-poem', poem.name);
+        row.innerHTML = `
+          <td class="px-6 py-4">
+            <div class="font-medium ${badgeDotClass}">${poem.name}</div>
+            <div class="text-sm text-gray-500">${poem.type}</div>
+          </td>
+          <td class="px-6 py-4">${poem.author}</td>
+          <td class="px-6 py-4">
+            <span class="inline-flex items-center justify-center w-8 h-8 rounded-full ${timesClass} text-sm font-medium">${poem.times}次</span>
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-600">${poem.lastDate}</td>
+          <td class="px-6 py-4">
+            <span class="inline-flex items-center justify-center w-10 h-10 rounded-full ${scoreClass} font-medium">${poem.score}</span>
+          </td>
+          <td class="px-6 py-4">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${poem.statusClass}">
+              <i class="fa ${poem.icon} mr-1"></i>${poem.status}
+            </span>
+          </td>
+          <td class="px-6 py-4">
+            <button class="text-primary hover:text-secondary transition-colors duration-200 mr-3 history-btn" data-poem="${poem.name}">
+              <i class="fa fa-history" aria-hidden="true"></i> 历史
+            </button>
+            <button class="text-gray-500 hover:text-gray-700 transition-colors duration-200 recite-again-btn" data-poem="${poem.name}">
+              <i class="fa fa-repeat" aria-hidden="true"></i> 再背
+            </button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    // 渲染分页按钮
+    function renderPaginationButtons() {
+      const paginationContainer = document.getElementById('pagination');
+      const buttons = paginationContainer.querySelectorAll('.pagination-btn');
+
+      // 更新上一页按钮状态
+      buttons.forEach(btn => {
+        if (btn.getAttribute('data-page') === 'prev') {
+          btn.disabled = currentPage === 1;
+          if (currentPage === 1) {
+            btn.classList.add('text-gray-500');
+            btn.classList.remove('hover:border-primary', 'hover:text-primary');
+          } else {
+            btn.classList.remove('text-gray-500');
+            btn.classList.add('hover:border-primary', 'hover:text-primary');
+          }
+        }
+
+        // 更新下一页按钮状态
+        if (btn.getAttribute('data-page') === 'next') {
+          btn.disabled = currentPage === totalPages || totalPages === 0;
+          if (currentPage === totalPages || totalPages === 0) {
+            btn.classList.add('text-gray-500');
+            btn.classList.remove('hover:border-primary', 'hover:text-primary');
+          } else {
+            btn.classList.remove('text-gray-500');
+            btn.classList.add('hover:border-primary', 'hover:text-primary');
+          }
+        }
+
+        // 更新页码按钮状态
+        const pageNum = btn.getAttribute('data-page');
+        if (!isNaN(pageNum)) {
+          const page = parseInt(pageNum);
+          if (page === currentPage) {
+            btn.classList.add('bg-primary', 'text-white');
+            btn.classList.remove('border', 'border-gray-200', 'hover:border-primary', 'hover:text-primary');
+          } else {
+            btn.classList.remove('bg-primary', 'text-white');
+            btn.classList.add('border', 'border-gray-200', 'hover:border-primary', 'hover:text-primary');
+
+            // 隐藏超出总页数的页码
+            if (page > totalPages) {
+              btn.style.display = 'none';
+            } else {
+              btn.style.display = 'flex';
+            }
+          }
+        }
+      });
+    }
+
+    // 更新当前范围显示
+    function updateCurrentRange() {
+      if (totalPoems === 0) {
+        document.getElementById('currentRange').textContent = '0-0';
+        return;
+      }
+      const start = (currentPage - 1) * pageSize + 1;
+      const end = Math.min(currentPage * pageSize, totalPoems);
+      document.getElementById('currentRange').textContent = `${start}-${end}`;
+    }
+
+    // 显示背诵历史弹窗（适配后端历史数据）
+    function showReciteHistory(poemName) {
+      currentPoem = poemName;
+      const modal = document.getElementById('reciteHistoryModal');
+      const modalTitle = document.getElementById('modalTitle');
+      const historyRecords = document.getElementById('historyRecords');
+      const studentName = document.getElementById('studentName').textContent;
+
+      // 设置弹窗标题
+      modalTitle.textContent = `${poemName} - 背诵历史`;
+
+      // 获取该古诗的背诵历史（后端返回的数据）
+      const history = reciteHistoryData[poemName] || [];
+
+      // 填充历史记录列表
+      historyRecords.innerHTML = '';
+      if (history.length === 0) {
+        historyRecords.innerHTML = `
+          <div class="text-center text-gray-500 py-4">
+            <i class="fa fa-history mr-2"></i> 暂无${studentName}的背诵记录
+          </div>
+        `;
+      } else {
+        history.forEach(item => {
+          // 根据状态获取对应的样式
+          let statusClass = '';
+          let statusIcon = '';
+
+          if (item.status === '已掌握') {
+            statusClass = 'bg-green-100 text-green-800';
+            statusIcon = 'fa-check-circle';
+          } else if (item.status === '已完成') {
+            statusClass = 'bg-blue-100 text-blue-800';
+            statusIcon = 'fa-check';
+          } else if (item.status === '需复习') {
+            statusClass = 'bg-yellow-100 text-yellow-800';
+            statusIcon = 'fa-exclamation-circle';
+          } else {
+            statusClass = 'bg-red-100 text-red-800';
+            statusIcon = 'fa-times-circle';
+          }
+
+          const recordItem = document.createElement('div');
+          recordItem.className = 'border border-gray-100 rounded-lg p-4 hover:bg-gray-50 transition-colors';
+          recordItem.innerHTML = `
+            <div class="flex justify-between items-start mb-2">
+              <div class="font-medium">第${item.times}次背诵</div>
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}">
+                <i class="fa ${statusIcon} mr-1"></i>${item.status}
+              </span>
+            </div>
+            <div class="flex flex-wrap gap-4 text-sm text-gray-600 mb-2">
+              <span><i class="fa fa-calendar mr-1 text-primary"></i> ${item.date}</span>
+              <span><i class="fa fa-score mr-1 text-primary"></i> 评分：${item.score}分</span>
+            </div>
+            <div class="text-sm text-gray-500">
+              <i class="fa fa-comment mr-1 text-primary"></i> 评语：${item.comment || '无'}
+            </div>
+          `;
+          historyRecords.appendChild(recordItem);
+        });
+      }
+
+      // 初始化历史评分趋势图
+      initHistoryScoreChart(poemName, history);
+
+      // 显示弹窗
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    // 初始化历史评分趋势图
+    function initHistoryScoreChart(poemName, history) {
+      const ctx = document.getElementById('historyScoreChart').getContext('2d');
+
+      // 销毁已存在的图表（避免重复渲染）
+      if (window.scoreChart) {
+        window.scoreChart.destroy();
+      }
+
+      // 处理数据
+      const labels = history.map(item => `第${item.times}次`);
+      const scores = history.map(item => item.score);
+      const dates = history.map(item => item.date);
+
+      // 创建图表
+      window.scoreChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: '背诵评分',
+            data: scores,
+            backgroundColor: 'rgba(67, 97, 238, 0.1)',
+            borderColor: '#4361ee',
+            borderWidth: 2,
+            pointBackgroundColor: '#4361ee',
+            pointBorderColor: '#fff',
+            pointHoverBackgroundColor: '#fff',
+            pointHoverBorderColor: '#4361ee',
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            tension: 0.3,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+              padding: 10,
+              cornerRadius: 8,
+              titleFont: { size: 14 },
+              bodyFont: { size: 13 },
+              callbacks: {
+                afterLabel: function(context) {
+                  const index = context.dataIndex;
+                  return `日期: ${dates[index]}`;
+                }
+              }
+            },
+            legend: {
+              display: true,
+              position: 'top',
+              labels: {
+                usePointStyle: true,
+                padding: 20
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              min: 60, // 最低分从60开始，更直观
+              max: 100,
+              ticks: {
+                stepSize: 10,
+                callback: function(value) {
+                  return value + '分';
+                }
+              },
+              grid: {
+                color: 'rgba(0, 0, 0, 0.05)'
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // 关闭背诵历史弹窗
+    function closeModal() {
+      const modal = document.getElementById('reciteHistoryModal');
+      modal.classList.add('hidden');
+      document.body.style.overflow = 'auto';
+    }
+
+    // 关闭设置弹窗
+    function closeSettingsModal() {
+      document.getElementById('settingsBackdrop').classList.remove('show');
+      document.getElementById('settingsModal').classList.remove('show');
+    }
+
+    // 关闭再背一次弹窗
+    function closeReciteAgainModal() {
+      document.getElementById('reciteAgainBackdrop').classList.remove('show');
+      document.getElementById('reciteAgainModal').classList.remove('show');
+    }
+
+    // 显示提示框
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = 'toast';
+      toast.classList.add(type, 'show');
+
+      // 3秒后自动关闭
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // 处理移动端点击外部关闭菜单
+    document.addEventListener('click', function(e) {
+      const mobileMenu = document.getElementById('mobileMenu');
+      const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+
+      if (!mobileMenuBtn.contains(e.target) && !mobileMenu.contains(e.target) && !mobileMenu.classList.contains('hidden')) {
+        mobileMenu.classList.add('hidden');
+      }
+    });
+
+    // 分页按钮键盘导航支持
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'ArrowLeft') {
+        if (currentPage > 1) {
+          handlePagination('prev');
+        }
+      } else if (e.key === 'ArrowRight') {
+        if (currentPage < totalPages) {
+          handlePagination('next');
+        }
+      }
+    });
+  </script>
+</body>
+</html>
