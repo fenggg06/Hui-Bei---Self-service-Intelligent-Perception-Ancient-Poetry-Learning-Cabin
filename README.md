@@ -1,4 +1,4 @@
-<img width="366" height="709" alt="image" src="https://github.com/user-attachments/assets/54bae40d-ad61-4215-affd-3a4fd96e498d" /># HuiBei - Intelligent Ancient Poetry Recitation Tutoring System
+# HuiBei - Intelligent Ancient Poetry Recitation Tutoring System
 
 ## 📖 Overview
 HuiBei is an intelligent educational platform based on speech recognition and AI technology, designed to help students improve their ancient Chinese poetry recitation skills. The system integrates Vosk speech recognition, DeepSeek AI scoring, intelligent study plan generation, and provides a dual-perspective learning management experience for both students and parents.
@@ -172,15 +172,8 @@ If you encounter issues, please check:
 3. Is microphone permission granted?
 4. Are all Python dependencies installed correctly?
 
-<img width="427" height="844" alt="image" src="https://github.com/user-attachments/assets/b1df237a-ba5b-4519-871a-08cce3fe78d7" />
-<img width="422" height="835" alt="image" src="https://github.com/user-attachments/assets/0b581e15-b07b-4ecb-95d2-d9f41d7e2dd5" />
-<img width="422" height="835" alt="image" src="https://github.com/user-attachments/assets/e6399103-bbd9-4a2e-b87e-7c5ad7966889" />
-<img width="420" height="812" alt="image" src="https://github.com/user-attachments/assets/123d24e8-f0c6-4812-8d4e-d49d30fbd4f1" />
-<img width="420" height="812" alt="image" src="https://github.com/user-attachments/assets/bf353cd8-47a0-431e-9694-1aec74f91b0a" />
-<img width="302" height="631" alt="image" src="https://github.com/user-attachments/assets/8285f349-0506-4abe-bb3d-df9504155d66" />
-<img width="366" height="709" alt="image" src="https://github.com/user-attachments/assets/91835a77-3ba1-46b4-b3df-d1094dbefe50" />
-<img width="366" height="709" alt="image" src="https://github.com/user-attachments/assets/16e8d8cc-8386-47d6-83c1-28083dab9df6" />
-<img width="240" height="505" alt="屏幕截图 2026-06-08 195728" src="https://github.com/user-attachments/assets/61898df8-19c3-4061-8f59-ed318853c954" />
+
+
 
 
 
