@@ -1,7 +1,7 @@
 # HuiBei - Intelligent Ancient Poetry Recitation Tutoring System
 
 ## 📖 Overview
-HuiBei is an intelligent educational platform based on speech recognition and AI technology, designed to help students improve their ancient Chinese poetry recitation skills. The system integrates Vosk speech recognition, DeepSeek AI scoring, intelligent study plan generation, and provides a dual-perspective learning management experience for both students and parents.
+HuiBei is an intelligent educational platform based on speech recognition and AI technology, designed to help students improve their ancient Chinese poetry recitation skills. The system integrates Vosk speech recognition, DeepSeek AI scoring, intelligent study plan generation, and provides a dual-perspective learning management experience for both students and parents！
 
 ## ✨ Core Features
 
